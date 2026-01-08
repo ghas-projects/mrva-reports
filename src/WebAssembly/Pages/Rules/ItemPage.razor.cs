@@ -32,7 +32,7 @@ public partial class ItemPage
             return;
         }
         
-        Rule = DataStore.FindRuleByRowId(RowId.Value);
+        Rule = DataStore.SingleRule(RowId.Value);
 
         if (Rule == null)
         {

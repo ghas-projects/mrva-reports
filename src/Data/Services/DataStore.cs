@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using MRVA.Reports.Data.Helpers;
 using MRVA.Reports.Data.Models;
 using SolTechnology.Avro;
@@ -15,14 +16,17 @@ public class DataStore
         _ruleList = AvroConvert.Deserialize<List<Rule>>(bytes) ?? [];
     }
     
-    public List<Rule> GetRuleList()
+    public IList<Rule> ListRule()
     {
-        return _ruleList;
+        return _ruleList
+            .OrderBy(rule => rule.RuleId)
+            .ToImmutableList();
     }
 
-    public Rule? FindRuleByRowId(int rowId)
+    public Rule? SingleRule(int rowId)
     {
-        return _ruleList.FirstOrDefault(r => r.RowId == rowId);
+        return _ruleList
+            .FirstOrDefault(rule => rule.RowId == rowId);
     }
     
 }

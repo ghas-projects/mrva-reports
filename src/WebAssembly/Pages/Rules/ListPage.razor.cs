@@ -21,7 +21,7 @@ public partial class ListPage : ComponentBase
         new(ScreenText.Rules, href: null, disabled: true),
     ];
     
-    private List<Rule>? RuleList { get; set; }
+    private IList<Rule>? RuleList { get; set; }
     private Rule? SelectedRule { get; set; }
     
     private string? SearchString { get; set; }
@@ -43,7 +43,7 @@ public partial class ListPage : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        RuleList = DataStore.GetRuleList();
+        RuleList = DataStore.ListRule();
     }
     
     string RowStyleFunc(Rule rule)

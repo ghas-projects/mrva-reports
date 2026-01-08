@@ -24,11 +24,20 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
       - name: Restore dependencies
         run: dotnet restore src/WebAssembly/WebAssembly.csproj
 
       - name: Publish
-        run: dotnet publish src/WebAssembly/WebAssembly.csproj -c Release -o release --nologo
+        run: 
+          dotnet publish \
+            src/WebAssembly/WebAssembly.csproj \
+            -c Release \
+            -o release \
+            --nologo \
+            /p:RunAOTCompilation=true
 
       - name: Add .nojekyll file
         run: touch release/wwwroot/.nojekyll
