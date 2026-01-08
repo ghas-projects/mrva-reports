@@ -27,7 +27,7 @@
   <ItemGroup>
     <EmbeddedResource Update="Properties\ScreenText.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <LastGenOutput>ScreenText.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 

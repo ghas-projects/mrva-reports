@@ -1,0 +1,49 @@
+@page "/rule"
+@using MRVA.Reports.Data.Models
+
+<MudBreadcrumbs 
+    Items="BreadcrumbItems"
+    Separator=">" />
+
+@if (RuleList == null)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+    return;
+}
+
+<MudDataGrid 
+    T="Rule"
+    Filterable="true"
+    Items="@RuleList"
+    MultiSelection="false"
+    QuickFilter="@RuleFilter"
+    RowStyleFunc="(rule, _) => RowStyleFunc(rule)"
+    RowClick="@RowClicked"
+    SelectedItem="SelectedRule"
+    SortMode="SortMode.Single">
+    <ToolBarContent>
+        <MudButton
+            Disabled="@(SelectedRule == null)"
+            OnClick="NavigateToRule"
+            StartIcon="@Icons.Material.Outlined.Visibility"
+            Variant="Variant.Outlined">
+            View
+        </MudButton>
+        <MudSpacer/>
+        <MudTextField
+            @bind-Value="SearchString"
+            Placeholder="@ScreenText.Search"
+            Adornment="Adornment.Start"
+            Immediate="true"
+            AdornmentIcon="@Icons.Material.Filled.Search"
+            IconSize="Size.Medium"
+            Class="mt-0"/>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="rule => rule.RuleId" Title="@ScreenText.Id" />
+        <PropertyColumn Property="rule => rule.Message" Title="@ScreenText.Message" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="Rule" />
+    </PagerContent>
+</MudDataGrid>

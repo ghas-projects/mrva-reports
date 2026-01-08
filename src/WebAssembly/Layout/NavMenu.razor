@@ -3,27 +3,21 @@
         Icon="@Icons.Material.Outlined.Home" 
         Href="/"
         Match="NavLinkMatch.All">
-        @ScreenText.Dashboard
+        @ScreenText.Home
     </MudNavLink>
 
-    <MudNavLink 
-        Icon="@Icons.Material.Outlined.Cloud"
-        Href="/weather"
-        Match="NavLinkMatch.Prefix">
-        Weather
-    </MudNavLink>
-    
-    <MudNavLink 
-        Icon="@Icons.Material.Outlined.Coronavirus"
-        Href="/vuln"
-        Match="NavLinkMatch.Prefix">
-        @ScreenText.Vulnerabilities
-    </MudNavLink>
-    
     <MudNavLink 
         Icon="@Icons.Material.Outlined.Code"
         Href="/repo"
         Match="NavLinkMatch.Prefix">
         @ScreenText.Repositories
     </MudNavLink>
+
+    <MudNavLink 
+        Icon="@Icons.Material.Outlined.Rule"
+        Href="/rule"
+        Match="NavLinkMatch.Prefix">
+        @ScreenText.Rules
+    </MudNavLink>
+    
 </MudNavMenu>

@@ -1,0 +1,12 @@
+@page "/rule/{RowId:int}"
+
+<MudBreadcrumbs 
+    Items="BreadcrumbItems"
+    Separator=">" />
+
+@if (Rule == null)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+    return;
+}
+

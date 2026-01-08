@@ -51,21 +51,15 @@ namespace MRVA.Reports.WebAssembly.Properties {
             }
         }
         
-        internal static string Vulnerabilities {
+        internal static string Rules {
             get {
-                return ResourceManager.GetString("Vulnerabilities", resourceCulture);
+                return ResourceManager.GetString("Rules", resourceCulture);
             }
         }
         
         internal static string Title {
             get {
                 return ResourceManager.GetString("Title", resourceCulture);
-            }
-        }
-        
-        internal static string Dashboard {
-            get {
-                return ResourceManager.GetString("Dashboard", resourceCulture);
             }
         }
         
@@ -84,6 +78,24 @@ namespace MRVA.Reports.WebAssembly.Properties {
         internal static string Search {
             get {
                 return ResourceManager.GetString("Search", resourceCulture);
+            }
+        }
+        
+        internal static string Id {
+            get {
+                return ResourceManager.GetString("Id", resourceCulture);
+            }
+        }
+        
+        internal static string Message {
+            get {
+                return ResourceManager.GetString("Message", resourceCulture);
+            }
+        }
+        
+        internal static string Home {
+            get {
+                return ResourceManager.GetString("Home", resourceCulture);
             }
         }
     }
