@@ -7,7 +7,6 @@
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     <PublishTrimmed>true</PublishTrimmed>
     <RootNamespace>MRVA.Reports.WebAssembly</RootNamespace>
-    <RunAOTCompilation>true</RunAOTCompilation>
     <TargetFramework>net10.0</TargetFramework>
     <TrimMode>link</TrimMode>
   </PropertyGroup>
