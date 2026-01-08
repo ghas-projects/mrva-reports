@@ -31,12 +31,12 @@ jobs:
         run: dotnet restore src/WebAssembly/WebAssembly.csproj
 
       - name: Publish
-        run: 
-          dotnet publish \
-            src/WebAssembly/WebAssembly.csproj \
-            -c Release \
-            -o release \
-            --nologo \
+        run: >
+          dotnet publish 
+            src/WebAssembly/WebAssembly.csproj 
+            -c Release 
+            -o release 
+            --nologo 
             /p:RunAOTCompilation=true
 
       - name: Add .nojekyll file
