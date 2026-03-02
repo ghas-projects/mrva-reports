@@ -18,6 +18,9 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
+    <data name="Description" xml:space="preserve">
+        <value>Description</value>
+    </data>
     <data name="Repositories" xml:space="preserve">
         <value>Repositories</value>
     </data>
@@ -48,4 +51,35 @@
     <data name="Home" xml:space="preserve">
         <value>Home</value>
     </data>
+    <data name="TotalAlerts" xml:space="preserve">
+        <value>Total Alerts</value>
+    </data>
+    <data name="TotalRepositories" xml:space="preserve">
+        <value>Total Repositories</value>
+    </data>
+    <data name="TotalRules" xml:space="preserve">
+        <value>Total Rules</value>
+    </data>
+    <data name="TotalRuns" xml:space="preserve">
+        <value>Total Runs</value>
+    </data>
+    <data name="AlertsBySeverity" xml:space="preserve">
+        <value>Alerts by Severity</value>
+    </data>
+    <data name="AlertsByRule" xml:space="preserve">
+        <value>Alerts by Rule</value>
+    </data>
+    <data name="Top5AffectedRepositories" xml:space="preserve">
+        <value>Top 5 Affected Repositories</value>
+    </data>
+    <data name="Rank" xml:space="preserve">
+        <value>#</value>
+    </data>
+    <data name="Repository" xml:space="preserve">
+        <value>Repository</value>
+    </data>
+    <data name="Alerts" xml:space="preserve">
+        <value>Alerts</value>
+    </data>
+    
 </root>

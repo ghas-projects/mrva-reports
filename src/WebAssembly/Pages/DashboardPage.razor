@@ -1,8 +1,81 @@
 ﻿@page "/"
 @layout MainLayout
 
-<PageTitle>Home</PageTitle>
+<PageTitle>@ScreenText.Dashboard</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudBreadcrumbs 
+    Items="BreadcrumbItems"
+    Separator=">" />
 
-Welcome to your new app.
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+    <MudGrid Class="mt-4" Spacing="4">
+        <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2">
+            <MudIcon Icon="@Icons.Material.Outlined.BugReport" Size="Size.Large" Color="Color.Error" />
+            <MudText Typo="Typo.h4" Class="mt-2">@AlertCount</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Default">@ScreenText.TotalAlerts</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2">
+            <MudIcon Icon="@Icons.Material.Outlined.Code" Size="Size.Large" Color="Color.Primary" />
+            <MudText Typo="Typo.h4" Class="mt-2">@RepositoryCount</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Default">@ScreenText.TotalRepositories</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2">
+            <MudIcon Icon="@Icons.Material.Outlined.Rule" Size="Size.Large" Color="Color.Warning" />
+            <MudText Typo="Typo.h4" Class="mt-2">@RuleCount</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Default">@ScreenText.TotalRules</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2">
+            <MudIcon Icon="@Icons.Material.Outlined.PlayCircleOutline" Size="Size.Large" Color="Color.Success" />
+            <MudText Typo="Typo.h4" Class="mt-2">@RunCount</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Default">@ScreenText.TotalRuns</MudText>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+    <MudGrid Class="mt-4 align-stretch" Spacing="4">
+        <MudItem xs="12" md="6" Class="d-flex">
+            <MudPaper Class="pa-6 flex-grow-1" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.AlertsBySeverity</MudText>
+                <MudChart ChartType="ChartType.Pie"
+                          InputData="@SeverityData"
+                          InputLabels="@SeverityLabels"
+                          ChartOptions="@SeverityChartOptions"
+                          Width="100%%" Height="300px" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6" Class="d-flex">
+            <MudPaper Class="pa-6 flex-grow-1" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.AlertsByRule</MudText>
+                <MudChart ChartType="ChartType.Donut"
+                          InputData="@RuleData"
+                          InputLabels="@RuleLabels"
+                          Width="100%%" Height="300px" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mt-4" Spacing="4">
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-6" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.Top5AffectedRepositories</MudText>
+                <MudTable Items="@TopRepositories" Dense="true" Hover="true" Striped="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>@ScreenText.Rank</MudTh>
+                        <MudTh>@ScreenText.Repository</MudTh>
+                        <MudTh Style="text-align: right">@ScreenText.Alerts</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Rank</MudTd>
+                        <MudTd>@context.Name</MudTd>
+                        <MudTd Style="text-align: right">@context.Count</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

@@ -1,23 +1,46 @@
-﻿<MudNavMenu>
+﻿<MudNavMenu Color="Color.Inherit" Class="mt-2">
     <MudNavLink 
         Icon="@Icons.Material.Outlined.Home" 
         Href="/"
-        Match="NavLinkMatch.All">
-        @ScreenText.Home
+        Match="NavLinkMatch.All"
+        Style="color: rgba(255,255,255,0.85);"
+        Class="nav-link-ombre">
+        Home
     </MudNavLink>
 
     <MudNavLink 
         Icon="@Icons.Material.Outlined.Code"
         Href="/repo"
-        Match="NavLinkMatch.Prefix">
-        @ScreenText.Repositories
+        Match="NavLinkMatch.Prefix"
+        Style="color: rgba(255,255,255,0.85);"
+        Class="nav-link-ombre">
+        Repositories
     </MudNavLink>
 
     <MudNavLink 
         Icon="@Icons.Material.Outlined.Rule"
         Href="/rule"
-        Match="NavLinkMatch.Prefix">
-        @ScreenText.Rules
+        Match="NavLinkMatch.Prefix"
+        Style="color: rgba(255,255,255,0.85);"
+        Class="nav-link-ombre">
+        Rules
     </MudNavLink>
     
 </MudNavMenu>
+
+<style>
+    .nav-link-ombre .mud-nav-link-icon {
+        color: rgba(255,255,255,0.7) !important;
+    }
+    .nav-link-ombre:hover {
+        background-color: rgba(255,255,255,0.12) !important;
+        color: #fff !important;
+    }
+    .nav-link-ombre.active {
+        background-color: rgba(255,255,255,0.18) !important;
+        color: #fff !important;
+    }
+    .nav-link-ombre.active .mud-nav-link-icon {
+        color: #fff !important;
+    }
+</style>

@@ -45,7 +45,7 @@ public partial class ItemPage
         BreadcrumbItems =     [
             new(ScreenText.Home, href: "/"),
             new(ScreenText.Rules, href: "/rule"),
-            new(Rule.RuleId, href: null, disabled: true)
+            new(Rule.Id, href: null, disabled: true)
         ];
     }
 }

@@ -22,17 +22,12 @@
 
   <ItemGroup>
     <EmbeddedResource Update="Properties\ScreenText.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ScreenText.Designer.cs</LastGenOutput>
+      <Generator>MSBuild:Compile</Generator>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedClassName>ScreenText</StronglyTypedClassName>
+      <StronglyTypedNamespace>MRVA.Reports.WebAssembly.Properties</StronglyTypedNamespace>
+      <StronglyTypedFileName>Properties\ScreenText.Designer.cs</StronglyTypedFileName>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\ScreenText.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ScreenText.resx</DependentUpon>
-    </Compile>
   </ItemGroup>
 
 </Project>

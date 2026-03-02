@@ -33,9 +33,9 @@ public partial class ListPage
         {
             return true;
         }
-
+        
         return rule
-            .RuleId
+            .Id
             .Contains(
                 SearchString,
                 StringComparison.OrdinalIgnoreCase
@@ -48,7 +48,7 @@ public partial class ListPage
         
         RuleList = DataStore
             .RuleSet
-            .OrderBy(rule => rule.RuleId)
+            .OrderBy(rule => rule.RowId)
             .ToImmutableList();
     }
     
