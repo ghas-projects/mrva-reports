@@ -1,5 +1,55 @@
 @page "/repo"
+@using MRVA.Reports.Data.Models
 
-<PageTitle>@ScreenText.Repositories</PageTitle>
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
 
-<h3>@ScreenText.Repositories</h3>
+<MudBreadcrumbs 
+    Items="BreadcrumbItems"
+    Separator=">" />
+
+@if (RepositoryList == null)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+    return;
+}
+
+<MudDataGrid 
+    T="RepositoryRow"
+    Filterable="true"
+    Items="@RepositoryList"
+    MultiSelection="false"
+    QuickFilter="@RepositoryFilter"
+    RowStyleFunc="(repo, _) => RowStyleFunc(repo)"
+    RowClick="@RowClicked"
+    SelectedItem="SelectedRepository"
+    SortMode="SortMode.Single"
+    Dense="true"
+    Hover="true"
+    Striped="true"
+    Bordered="true"
+    Elevation="2"
+    RowsPerPage="@PageSize"
+    Class="mt-4">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@ScreenText.Repositories</MudText>
+        <MudSpacer/>
+        <MudTextField
+            @bind-Value="SearchString"
+            Placeholder="@ScreenText.Search"
+            Adornment="Adornment.Start"
+            Immediate="true"
+            AdornmentIcon="@Icons.Material.Filled.Search"
+            IconSize="Size.Medium"
+            Class="mt-0"/>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="r => r.Repository.RepositoryName" Title="@ScreenText.Name" />
+        <PropertyColumn Property="r => r.Repository.RepositoryUrl" Title="@ScreenText.Url" />
+        <PropertyColumn Property="r => r.AlertCount" Title="@ScreenText.Alerts" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="RepositoryRow" PageSizeOptions="@(new[] { 10, 25, 50, 100 })" />
+    </PagerContent>
+</MudDataGrid>
+
+</MudContainer>

@@ -69,8 +69,11 @@
     <data name="AlertsByRule" xml:space="preserve">
         <value>Alerts by Rule</value>
     </data>
-    <data name="Top5AffectedRepositories" xml:space="preserve">
-        <value>Top 5 Affected Repositories</value>
+    <data name="Rule" xml:space="preserve">
+        <value>Rule</value>
+    </data>
+    <data name="Top10AffectedRepositories" xml:space="preserve">
+        <value>Top 10 Affected Repositories</value>
     </data>
     <data name="Rank" xml:space="preserve">
         <value>#</value>
@@ -80,6 +83,75 @@
     </data>
     <data name="Alerts" xml:space="preserve">
         <value>Alerts</value>
+    </data>
+    <data name="Top10CommonFilePaths" xml:space="preserve">
+        <value>Top 10 Most Common File Paths</value>
+    </data>
+    <data name="FilePath" xml:space="preserve">
+        <value>File Path</value>
+    </data>
+    <data name="RepositoryAlertCoverage" xml:space="preserve">
+        <value>Repository Alert Coverage</value>
+    </data>
+    <data name="WithAlerts" xml:space="preserve">
+        <value>With Alerts</value>
+    </data>
+    <data name="WithoutAlerts" xml:space="preserve">
+        <value>Without Alerts</value>
+    </data>
+    <data name="RuleAlertCoverage" xml:space="preserve">
+        <value>Rule Alert Coverage</value>
+    </data>
+    <data name="ShowingTop10" xml:space="preserve">
+        <value>Showing top 10 results only</value>
+    </data>
+    <data name="Name" xml:space="preserve">
+        <value>Name</value>
+    </data>
+    <data name="Url" xml:space="preserve">
+        <value>URL</value>
+    </data>
+    <data name="Severity" xml:space="preserve">
+        <value>Severity</value>
+    </data>
+    <data name="Kind" xml:space="preserve">
+        <value>Kind</value>
+    </data>
+    <data name="PropertyTags" xml:space="preserve">
+        <value>Property Tags</value>
+    </data>
+    <data name="Line" xml:space="preserve">
+        <value>Line</value>
+    </data>
+    <data name="StartLine" xml:space="preserve">
+        <value>Start Line</value>
+    </data>
+    <data name="StartColumn" xml:space="preserve">
+        <value>Start Column</value>
+    </data>
+    <data name="EndLine" xml:space="preserve">
+        <value>End Line</value>
+    </data>
+    <data name="EndColumn" xml:space="preserve">
+        <value>End Column</value>
+    </data>
+    <data name="Source" xml:space="preserve">
+        <value>Source</value>
+    </data>
+    <data name="Sink" xml:space="preserve">
+        <value>Sink</value>
+    </data>
+    <data name="Snippet" xml:space="preserve">
+        <value>Snippet</value>
+    </data>
+    <data name="Context" xml:space="preserve">
+        <value>Context</value>
+    </data>
+    <data name="StepCount" xml:space="preserve">
+        <value>Step Count</value>
+    </data>
+    <data name="ResultFingerprint" xml:space="preserve">
+        <value>Result Fingerprint</value>
     </data>
     
 </root>

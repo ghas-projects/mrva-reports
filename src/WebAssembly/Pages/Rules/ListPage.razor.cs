@@ -9,80 +9,133 @@ namespace MRVA.Reports.WebAssembly.Pages.Rules;
 
 public partial class ListPage
 {
-    
     [Inject]
     public required DataStore DataStore { get; set; }
-    
+
     [Inject]
     public required NavigationManager NavigationManager { get; set; }
-    
+
     private List<BreadcrumbItem> BreadcrumbItems =>
     [
         new(ScreenText.Home, href: "/"),
         new(ScreenText.Rules, href: null, disabled: true),
     ];
-    
-    private IList<Rule>? RuleList { get; set; }
-    private Rule? SelectedRule { get; set; }
-    
-    private string? SearchString { get; set; }
 
-    private Func<Rule, bool> RuleFilter => rule =>
+    public record RuleRow(Rule Rule, int AlertCount)
+    {
+        public string PropertyTagsDisplay { get; } = string.Join(", ", Rule.PropertyTags);
+    }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "search")]
+    public string? InitialSearch { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "hasAlerts")]
+    public string? HasAlertsFilter { get; set; }
+
+    private IList<RuleRow>? RuleRows { get; set; }
+    private RuleRow? SelectedRow { get; set; }
+
+    private string? SearchString { get; set; }
+    private int PageSize { get; set; } = 10;
+
+    private Func<RuleRow, bool> RuleFilter => row =>
     {
         if (string.IsNullOrWhiteSpace(SearchString))
         {
             return true;
         }
-        
-        return rule
-            .Id
-            .Contains(
-                SearchString,
-                StringComparison.OrdinalIgnoreCase
-            );
+
+        if (row.Rule.Id.Contains(SearchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (row.Rule.RuleDescription.Contains(SearchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (row.Rule.SeverityLevel.Contains(SearchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (row.Rule.Kind.Contains(SearchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (row.Rule.PropertyTags.Any(t => t.Contains(SearchString, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        return false;
     };
 
     protected override void OnInitialized()
     {
-        base.OnInitializedAsync();
-        
-        RuleList = DataStore
-            .RuleSet
-            .OrderBy(rule => rule.RowId)
+        base.OnInitialized();
+
+        SearchString = InitialSearch;
+
+        var alertCountsByRule = DataStore.AlertSet
+            .GroupBy(a => a.RuleRowId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        RuleRows = DataStore.RuleSet
+            .OrderBy(r => r.Id)
+            .Select(r => new RuleRow(
+                r,
+                alertCountsByRule.TryGetValue(r.RowId, out var count) ? count : 0))
+            .Where(r => HasAlertsFilter switch
+            {
+                "true" => r.AlertCount > 0,
+                "false" => r.AlertCount == 0,
+                _ => true,
+            })
             .ToImmutableList();
+
+        PageSize = RuleRows.Count switch
+        {
+            > 100 => 100,
+            > 50 => 50,
+            > 10 => 25,
+            _ => 10,
+        };
     }
-    
-    string RowStyleFunc(Rule rule)
+
+    private string RowStyleFunc(RuleRow row)
     {
-        return rule.Equals(SelectedRule) ? "background-color: var(--mud-palette-info-lighten)" : string.Empty;
+        return row.Equals(SelectedRow) ? "background-color: var(--mud-palette-info-lighten)" : string.Empty;
     }
-    
-    void RowClicked(DataGridRowClickEventArgs<Rule> args)
+
+    private void RowClicked(DataGridRowClickEventArgs<RuleRow> args)
     {
         if (args.MouseEventArgs.Detail == 2)
         {
-            // handle double click
-            SelectedRule = args.Item;
+            SelectedRow = args.Item;
             NavigateToRule();
             return;
         }
 
-        if (SelectedRule == args.Item)
+        if (SelectedRow == args.Item)
         {
-            SelectedRule = null;
+            SelectedRow = null;
             return;
         }
-        
-        SelectedRule = args.Item;
+
+        SelectedRow = args.Item;
     }
 
-    void NavigateToRule()
+    private void NavigateToRule()
     {
-        if (SelectedRule == null)
+        if (SelectedRow == null)
         {
             return;
         }
-        NavigationManager.NavigateTo($"rule/{SelectedRule.RowId}");
+        NavigationManager.NavigateTo($"rule/{SelectedRow.Rule.RowId}");
     }
-    
 }

@@ -1,40 +1,34 @@
 ﻿@page "/"
 @layout MainLayout
 
-<PageTitle>@ScreenText.Dashboard</PageTitle>
+<PageTitle>@AnalysisId</PageTitle>
 
 <MudBreadcrumbs 
     Items="BreadcrumbItems"
     Separator=">" />
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-2">MRVA Analysis ID: @AnalysisId</MudText>
     <MudGrid Class="mt-4" Spacing="4">
-        <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2">
+        <MudItem xs="12" sm="6" md="4">
+        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2" Style="cursor: pointer" @onclick="NavigateToAlerts">
             <MudIcon Icon="@Icons.Material.Outlined.BugReport" Size="Size.Large" Color="Color.Error" />
             <MudText Typo="Typo.h4" Class="mt-2">@AlertCount</MudText>
             <MudText Typo="Typo.body2" Color="Color.Default">@ScreenText.TotalAlerts</MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2">
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2" Style="cursor: pointer" @onclick="NavigateToRepositories">
             <MudIcon Icon="@Icons.Material.Outlined.Code" Size="Size.Large" Color="Color.Primary" />
             <MudText Typo="Typo.h4" Class="mt-2">@RepositoryCount</MudText>
             <MudText Typo="Typo.body2" Color="Color.Default">@ScreenText.TotalRepositories</MudText>
         </MudPaper>
     </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2">
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2" Style="cursor: pointer" @onclick="NavigateToRules">
             <MudIcon Icon="@Icons.Material.Outlined.Rule" Size="Size.Large" Color="Color.Warning" />
             <MudText Typo="Typo.h4" Class="mt-2">@RuleCount</MudText>
             <MudText Typo="Typo.body2" Color="Color.Default">@ScreenText.TotalRules</MudText>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-        <MudPaper Class="d-flex flex-column align-center justify-center pa-6" Elevation="2">
-            <MudIcon Icon="@Icons.Material.Outlined.PlayCircleOutline" Size="Size.Large" Color="Color.Success" />
-            <MudText Typo="Typo.h4" Class="mt-2">@RunCount</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Default">@ScreenText.TotalRuns</MudText>
         </MudPaper>
     </MudItem>
 </MudGrid>
@@ -46,15 +40,52 @@
                           InputData="@SeverityData"
                           InputLabels="@SeverityLabels"
                           ChartOptions="@SeverityChartOptions"
+                          @bind-SelectedIndex="SelectedSeverityIndex"
                           Width="100%%" Height="300px" />
             </MudPaper>
         </MudItem>
         <MudItem xs="12" md="6" Class="d-flex">
             <MudPaper Class="pa-6 flex-grow-1" Elevation="2">
                 <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.AlertsByRule</MudText>
-                <MudChart ChartType="ChartType.Donut"
-                          InputData="@RuleData"
-                          InputLabels="@RuleLabels"
+                <MudTable Items="@RuleAlertCounts" Dense="true" Hover="true" Striped="true" Elevation="0" OnRowClick="RuleAlertCountClicked" T="RuleAlertCount" Style="cursor: pointer">
+                    <HeaderContent>
+                        <MudTh>@ScreenText.Rank</MudTh>
+                        <MudTh>@ScreenText.Rule</MudTh>
+                        <MudTh Style="text-align: right">@ScreenText.Alerts</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Rank</MudTd>
+                        <MudTd>@context.Rule</MudTd>
+                        <MudTd Style="text-align: right">@context.Count</MudTd>
+                    </RowTemplate>
+                </MudTable>
+                @if (RuleAlertCountsCapped)
+                {
+                    <MudText Typo="Typo.caption" Class="mt-2" Color="Color.Default">* @ScreenText.ShowingTop10</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+    <MudGrid Class="mt-4 align-stretch" Spacing="4">
+        <MudItem xs="12" md="6" Class="d-flex">
+            <MudPaper Class="pa-6 flex-grow-1" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.RepositoryAlertCoverage</MudText>
+                <MudChart ChartType="ChartType.Pie"
+                          InputData="@RepoCoverageData"
+                          InputLabels="@RepoCoverageLabels"
+                          ChartOptions="@RepoCoverageChartOptions"
+                          @bind-SelectedIndex="SelectedRepoCoverageIndex"
+                          Width="100%%" Height="300px" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6" Class="d-flex">
+            <MudPaper Class="pa-6 flex-grow-1" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.RuleAlertCoverage</MudText>
+                <MudChart ChartType="ChartType.Pie"
+                          InputData="@RuleCoverageData"
+                          InputLabels="@RuleCoverageLabels"
+                          ChartOptions="@RuleCoverageChartOptions"
+                          @bind-SelectedIndex="SelectedRuleCoverageIndex"
                           Width="100%%" Height="300px" />
             </MudPaper>
         </MudItem>
@@ -62,8 +93,8 @@
     <MudGrid Class="mt-4" Spacing="4">
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-6" Elevation="2">
-                <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.Top5AffectedRepositories</MudText>
-                <MudTable Items="@TopRepositories" Dense="true" Hover="true" Striped="true" Elevation="0">
+                <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.Top10AffectedRepositories</MudText>
+                <MudTable Items="@TopRepositories" Dense="true" Hover="true" Striped="true" Elevation="0" OnRowClick="TopRepositoryClicked" T="TopRepository" Style="cursor: pointer">
                     <HeaderContent>
                         <MudTh>@ScreenText.Rank</MudTh>
                         <MudTh>@ScreenText.Repository</MudTh>
@@ -72,6 +103,25 @@
                     <RowTemplate>
                         <MudTd>@context.Rank</MudTd>
                         <MudTd>@context.Name</MudTd>
+                        <MudTd Style="text-align: right">@context.Count</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-6" Elevation="2">
+                <MudText Typo="Typo.h6" Class="mb-4">@ScreenText.Top10CommonFilePaths</MudText>
+                <MudTable Items="@TopFilePaths" Dense="true" Hover="true" Striped="true" Elevation="0" OnRowClick="TopFilePathClicked" T="TopFilePath" Style="cursor: pointer">
+                    <HeaderContent>
+                        <MudTh>@ScreenText.Rank</MudTh>
+                        <MudTh>@ScreenText.FilePath</MudTh>
+                        <MudTh>@ScreenText.Repository</MudTh>
+                        <MudTh Style="text-align: right">@ScreenText.Alerts</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Rank</MudTd>
+                        <MudTd>@context.Path</MudTd>
+                        <MudTd>@context.Repository</MudTd>
                         <MudTd Style="text-align: right">@context.Count</MudTd>
                     </RowTemplate>
                 </MudTable>

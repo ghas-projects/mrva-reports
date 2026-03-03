@@ -1,0 +1,96 @@
+@page "/alert"
+@using MRVA.Reports.Data.Models
+
+<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+
+<MudBreadcrumbs 
+    Items="BreadcrumbItems"
+    Separator=">" />
+
+@if (AlertRows == null)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+    return;
+}
+
+<MudDataGrid 
+    T="AlertRow"
+    Filterable="true"
+    Items="@AlertRows"
+    MultiSelection="false"
+    QuickFilter="@AlertFilter"
+    SortMode="SortMode.Single"
+    Dense="true"
+    Hover="true"
+    Striped="true"
+    Bordered="true"
+    Elevation="2"
+    RowsPerPage="@PageSize"
+    Class="mt-4"
+    Style="overflow-x: auto;"
+    FixedHeader="true"
+    Height="70vh">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@ScreenText.Alerts</MudText>
+        <MudSpacer/>
+        <MudTextField
+            @bind-Value="SearchString"
+            Placeholder="@ScreenText.Search"
+            Adornment="Adornment.Start"
+            Immediate="true"
+            AdornmentIcon="@Icons.Material.Filled.Search"
+            IconSize="Size.Medium"
+            Class="mt-0"/>
+    </ToolBarContent>
+    <Columns>
+        <PropertyColumn Property="r => r.RuleName" Title="@ScreenText.Rule" />
+        <PropertyColumn Property="r => r.RuleKind" Title="@ScreenText.Kind" />
+        <PropertyColumn Property="r => r.RepositoryName" Title="@ScreenText.Repository" />
+        <PropertyColumn Property="r => r.Severity" Title="@ScreenText.Severity" />
+        <PropertyColumn Property="r => r.Alert.FilePath" Title="@ScreenText.FilePath" />
+        <PropertyColumn Property="r => r.Alert.StartLine" Title="@ScreenText.StartLine" />
+        <PropertyColumn Property="r => r.Alert.StartColumn" Title="@ScreenText.StartColumn" />
+        <PropertyColumn Property="r => r.Alert.EndLine" Title="@ScreenText.EndLine" />
+        <PropertyColumn Property="r => r.Alert.EndColumn" Title="@ScreenText.EndColumn" />
+        <PropertyColumn Property="r => r.Alert.Message" Title="@ScreenText.Message" />
+        <TemplateColumn Title="@ScreenText.Source">
+            <CellTemplate>
+                @if (!string.IsNullOrEmpty(context.Item.Alert.CodeSnippetSource))
+                {
+                    <pre class="code-snippet">@context.Item.Alert.CodeSnippetSource</pre>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="@ScreenText.Sink">
+            <CellTemplate>
+                @if (!string.IsNullOrEmpty(context.Item.Alert.CodeSnippetSink))
+                {
+                    <pre class="code-snippet">@context.Item.Alert.CodeSnippetSink</pre>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="@ScreenText.Snippet">
+            <CellTemplate>
+                @if (!string.IsNullOrEmpty(context.Item.Alert.CodeSnippet))
+                {
+                    <pre class="code-snippet">@context.Item.Alert.CodeSnippet</pre>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="@ScreenText.Context">
+            <CellTemplate>
+                @if (!string.IsNullOrEmpty(context.Item.Alert.CodeSnippetContext))
+                {
+                    <pre class="code-snippet">@context.Item.Alert.CodeSnippetContext</pre>
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="r => r.Alert.StepCount" Title="@ScreenText.StepCount" />
+        <PropertyColumn Property="r => r.Alert.ResultFingerprint" Title="@ScreenText.ResultFingerprint" />
+    </Columns>
+    <PagerContent>
+        <MudDataGridPager T="AlertRow" PageSizeOptions="@(new[] { 10, 25, 50, 100 })" />
+    </PagerContent>
+</MudDataGrid>
+
+</MudContainer>
