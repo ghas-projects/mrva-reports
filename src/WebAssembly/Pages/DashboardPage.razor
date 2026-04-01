@@ -7,6 +7,12 @@
     Items="BreadcrumbItems"
     Separator=">" />
 
+@if (!IsLoaded)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+    return;
+}
+
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
     <MudText Typo="Typo.h5" Class="mb-2">MRVA Analysis ID: @AnalysisId</MudText>
     <MudGrid Class="mt-2" Spacing="4">

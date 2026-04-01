@@ -8,7 +8,7 @@ public static class ServiceCollectionExtension
 
     public static IServiceCollection AddReportData(this IServiceCollection services)
     {
-        services.AddSingleton<DataStore>();
+        services.AddScoped<DataStore>();
         return services;
     }
     

@@ -22,9 +22,9 @@ public partial class ItemPage
     
     private Rule? Rule { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await DataStore.InitializeAsync();
 
         if (!RowId.HasValue)
         {

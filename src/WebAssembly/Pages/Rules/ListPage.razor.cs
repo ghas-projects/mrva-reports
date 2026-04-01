@@ -75,15 +75,13 @@ public partial class ListPage
         return false;
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await DataStore.InitializeAsync();
 
         SearchString = InitialSearch;
 
-        var alertCountsByRule = DataStore.AlertSet
-            .GroupBy(a => a.RuleRowId)
-            .ToDictionary(g => g.Key, g => g.Count());
+        var alertCountsByRule = DataStore.AlertCountByRuleRowId;
 
         RuleRows = DataStore.RuleSet
             .OrderBy(r => r.Id)

@@ -19,6 +19,8 @@ public partial class DashboardPage
         new(ScreenText.Home, href: null, disabled: true),
     ];
 
+    private bool IsLoaded { get; set; }
+
     private int AlertCount { get; set; }
     private int RepositoryCount { get; set; }
     private int RuleCount { get; set; }
@@ -110,11 +112,11 @@ public partial class DashboardPage
         ChartPalette = ["#F44336", "#66BB6A"],
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await DataStore.InitializeAsync();
 
-        AlertCount = DataStore.AlertSet.Count;
+        AlertCount = DataStore.AlertCount;
         RepositoryCount = DataStore.RepositorySet.Count;
         RuleCount = DataStore.RuleSet.Count;
 
@@ -141,59 +143,59 @@ public partial class DashboardPage
         var ruleSeverityMap = DataStore.RuleSet.ToDictionary(r => r.RowId, r => r.SeverityLevel);
         var ruleNameMap = DataStore.RuleSet.ToDictionary(r => r.RowId, r => r.Id);
 
-        var severityGroups = DataStore.AlertSet
-            .GroupBy(a => ruleSeverityMap.TryGetValue(a.RuleRowId, out var s) && !string.IsNullOrEmpty(s) ? s : "unknown")
-            .OrderByDescending(g => g.Count())
+        // Build severity groups from pre-computed per-rule alert counts.
+        var severityGroups = DataStore.AlertCountByRuleRowId
+            .GroupBy(kv => ruleSeverityMap.TryGetValue(kv.Key, out var s) && !string.IsNullOrEmpty(s) ? s : "unknown")
+            .Select(g => (Key: g.Key, Count: g.Sum(kv => kv.Value)))
+            .OrderByDescending(g => g.Count)
             .ToList();
 
         SeverityLabels = severityGroups.Select(g => g.Key).ToArray();
-        SeverityData = severityGroups.Select(g => (double)g.Count()).ToArray();
+        SeverityData = severityGroups.Select(g => (double)g.Count).ToArray();
 
         var repoNameMap = DataStore.RepositorySet.ToDictionary(r => r.RowId, r => r.RepositoryFullName);
 
-        var ruleGroups = DataStore.AlertSet
-            .GroupBy(a => ruleNameMap.TryGetValue(a.RuleRowId, out var id) ? id : "unknown")
-            .OrderByDescending(g => g.Count())
+        // Build rule-alert-count table from pre-computed per-rule alert counts.
+        var ruleGroups = DataStore.AlertCountByRuleRowId
+            .Select(kv => (Rule: ruleNameMap.TryGetValue(kv.Key, out var id) ? id : "unknown", Count: kv.Value))
+            .OrderByDescending(g => g.Count)
             .ToList();
 
         RuleAlertCountsCapped = ruleGroups.Count > 10;
 
         RuleAlertCounts = ruleGroups
             .Take(10)
-            .Select((g, i) => new RuleAlertCount(i + 1, g.Key, g.Count()))
+            .Select((g, i) => new RuleAlertCount(i + 1, g.Rule, g.Count))
             .ToList();
 
-        var reposWithAlerts = DataStore.AlertSet.Select(a => a.RepositoryRowId).Distinct().Count();
+        var reposWithAlerts = DataStore.AlertCountByRepositoryRowId.Count;
         var reposWithoutAlerts = RepositoryCount - reposWithAlerts;
         RepoCoverageLabels = [ScreenText.WithAlerts, ScreenText.WithoutAlerts];
         RepoCoverageData = [reposWithAlerts, reposWithoutAlerts];
 
-        var rulesWithAlerts = DataStore.AlertSet.Select(a => a.RuleRowId).Distinct().Count();
+        var rulesWithAlerts = DataStore.AlertCountByRuleRowId.Count;
         var rulesWithoutAlerts = RuleCount - rulesWithAlerts;
         RuleCoverageLabels = [ScreenText.WithAlerts, ScreenText.WithoutAlerts];
         RuleCoverageData = [rulesWithAlerts, rulesWithoutAlerts];
 
-        TopRepositories = DataStore.AlertSet
-            .GroupBy(a => a.RepositoryRowId)
-            .OrderByDescending(g => g.Count())
+        TopRepositories = DataStore.AlertCountByRepositoryRowId
+            .OrderByDescending(kv => kv.Value)
             .Take(10)
-            .Select((g, i) => new TopRepository(
+            .Select((kv, i) => new TopRepository(
                 i + 1,
-                repoNameMap.TryGetValue(g.Key, out var name) ? name : $"Repo {g.Key}",
-                g.Count()))
+                repoNameMap.TryGetValue(kv.Key, out var name) ? name : $"Repo {kv.Key}",
+                kv.Value))
             .ToList();
 
-        TopFilePaths = DataStore.AlertSet
-            .Where(a => !string.IsNullOrEmpty(a.FilePath))
-            .GroupBy(a => (a.FilePath, a.RepositoryRowId))
-            .OrderByDescending(g => g.Count())
-            .Take(10)
-            .Select((g, i) => new TopFilePath(
+        TopFilePaths = DataStore.TopFilePathAggregates
+            .Select((t, i) => new TopFilePath(
                 i + 1,
-                g.Key.FilePath,
-                repoNameMap.TryGetValue(g.Key.RepositoryRowId, out var rName) ? rName : $"Repo {g.Key.RepositoryRowId}",
-                g.Count()))
+                t.FilePath,
+                repoNameMap.TryGetValue(t.RepositoryRowId, out var rName) ? rName : $"Repo {t.RepositoryRowId}",
+                t.Count))
             .ToList();
+
+        IsLoaded = true;
     }
 
     private int _selectedSeverityIndex = -1;

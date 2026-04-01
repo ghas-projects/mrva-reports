@@ -58,15 +58,13 @@ public partial class ListPage
         return false;
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await DataStore.InitializeAsync();
 
         SearchString = InitialSearch;
 
-        var alertCountsByRepo = DataStore.AlertSet
-            .GroupBy(a => a.RepositoryRowId)
-            .ToDictionary(g => g.Key, g => g.Count());
+        var alertCountsByRepo = DataStore.AlertCountByRepositoryRowId;
 
         RepositoryList = DataStore.RepositorySet
             .OrderBy(r => r.RepositoryFullName)

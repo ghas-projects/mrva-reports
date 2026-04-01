@@ -53,9 +53,9 @@ public partial class ListPage
             || row.Alert.ResultFingerprint.Contains(s, c);
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await DataStore.InitializeAsync();
 
         SearchString = InitialSearch;
 
@@ -64,7 +64,7 @@ public partial class ListPage
         var ruleSeverityMap = DataStore.RuleSet.ToDictionary(r => r.RowId, r => r.SeverityLevel);
         var repoNameMap = DataStore.RepositorySet.ToDictionary(r => r.RowId, r => r.RepositoryFullName);
 
-        AlertRows = DataStore.AlertSet
+        AlertRows = DataStore.Alerts
             .OrderBy(a => a.RowId)
             .Select(a => new AlertRow(
                 a,
