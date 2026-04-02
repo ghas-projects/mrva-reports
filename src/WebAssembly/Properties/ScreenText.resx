@@ -69,11 +69,14 @@
     <data name="AlertsByRule" xml:space="preserve">
         <value>Alerts by Rule</value>
     </data>
+    <data name="AlertsByTag" xml:space="preserve">
+        <value>Alerts by Tag</value>
+    </data>
     <data name="Rule" xml:space="preserve">
         <value>Rule</value>
     </data>
     <data name="Top10AffectedRepositories" xml:space="preserve">
-        <value>Top 10 Affected Repositories</value>
+        <value>Top 25 Affected Repositories</value>
     </data>
     <data name="Rank" xml:space="preserve">
         <value>#</value>
@@ -85,7 +88,7 @@
         <value>Alerts</value>
     </data>
     <data name="Top10CommonFilePaths" xml:space="preserve">
-        <value>Top 10 Most Common File Paths</value>
+        <value>Top 25 Most Common File Paths</value>
     </data>
     <data name="FilePath" xml:space="preserve">
         <value>File Path</value>
@@ -119,6 +122,9 @@
     </data>
     <data name="PropertyTags" xml:space="preserve">
         <value>Property Tags</value>
+    </data>
+    <data name="Tag" xml:space="preserve">
+        <value>Tag</value>
     </data>
     <data name="Line" xml:space="preserve">
         <value>Line</value>

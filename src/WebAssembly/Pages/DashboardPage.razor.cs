@@ -40,7 +40,7 @@ public partial class DashboardPage
     private int NotFoundReposCount { get; set; }
     private int NoCodeqlDbReposCount { get; set; }
     private int OverLimitReposCount { get; set; }
-    private int ActionsWorkflowRunId { get; set; }
+    private long ActionsWorkflowRunId { get; set; }
     private int TotalReposCount { get; set; }
 
     private double[] SeverityData { get; set; } = [];
@@ -116,11 +116,11 @@ public partial class DashboardPage
     {
         await DataStore.InitializeAsync();
 
-        AlertCount = DataStore.AlertCount;
-        RepositoryCount = DataStore.RepositorySet.Count;
-        RuleCount = DataStore.RuleSet.Count;
-
         var analysis = DataStore.AnalysisSet.FirstOrDefault();
+
+        AlertCount = analysis?.TotalAlertsCount ?? 0;
+        RepositoryCount = DataStore.RepositorySet.Count;
+        RuleCount = analysis?.TotalRulesCount ?? 0;
         AnalysisId = analysis?.AnalysisId ?? string.Empty;
         ToolName = analysis?.ToolName ?? string.Empty;
         ToolVersion = analysis?.ToolVersion ?? string.Empty;
@@ -140,59 +140,55 @@ public partial class DashboardPage
         ActionsWorkflowRunId = analysis?.ActionsWorkflowRunId ?? 0;
         TotalReposCount = analysis?.TotalReposCount ?? 0;
 
-        var ruleSeverityMap = DataStore.RuleSet.ToDictionary(r => r.RowId, r => r.SeverityLevel);
-        var ruleNameMap = DataStore.RuleSet.ToDictionary(r => r.RowId, r => r.Id);
-
-        // Build severity groups from pre-computed per-rule alert counts.
-        var severityGroups = DataStore.AlertCountByRuleRowId
-            .GroupBy(kv => ruleSeverityMap.TryGetValue(kv.Key, out var s) && !string.IsNullOrEmpty(s) ? s : "unknown")
-            .Select(g => (Key: g.Key, Count: g.Sum(kv => kv.Value)))
-            .OrderByDescending(g => g.Count)
+        // ── Severity pie chart from pre-computed summary ──
+        var severityItems = DataStore.AlertsBySeverity
+            .OrderByDescending(s => s.Count)
             .ToList();
+        SeverityLabels = severityItems.Select(s => s.Severity).ToArray();
+        SeverityData = severityItems.Select(s => (double)s.Count).ToArray();
 
-        SeverityLabels = severityGroups.Select(g => g.Key).ToArray();
-        SeverityData = severityGroups.Select(g => (double)g.Count).ToArray();
-
-        var repoNameMap = DataStore.RepositorySet.ToDictionary(r => r.RowId, r => r.RepositoryFullName);
-
-        // Build rule-alert-count table from pre-computed per-rule alert counts.
-        var ruleGroups = DataStore.AlertCountByRuleRowId
-            .Select(kv => (Rule: ruleNameMap.TryGetValue(kv.Key, out var id) ? id : "unknown", Count: kv.Value))
-            .OrderByDescending(g => g.Count)
+        // ── Alerts by rule table (top 10) ──
+        var ruleGroups = DataStore.RuleSet
+            .Select(r => (Rule: r, Count: r.TotalAlertsCount))
+            .Where(x => x.Count > 0)
+            .OrderByDescending(x => x.Count)
             .ToList();
 
         RuleAlertCountsCapped = ruleGroups.Count > 10;
 
         RuleAlertCounts = ruleGroups
             .Take(10)
-            .Select((g, i) => new RuleAlertCount(i + 1, g.Rule, g.Count))
+            .Select((x, i) => new RuleAlertCount(i + 1, x.Rule.Id, x.Count))
             .ToList();
 
-        var reposWithAlerts = DataStore.AlertCountByRepositoryRowId.Count;
-        var reposWithoutAlerts = RepositoryCount - reposWithAlerts;
+        // ── Coverage pie charts from analysis counts ──
+        var reposWithAlerts = analysis?.ReposWithAlertsCount ?? 0;
+        var reposWithoutAlerts = analysis?.ReposWithoutAlertsCount ?? 0;
         RepoCoverageLabels = [ScreenText.WithAlerts, ScreenText.WithoutAlerts];
         RepoCoverageData = [reposWithAlerts, reposWithoutAlerts];
 
-        var rulesWithAlerts = DataStore.AlertCountByRuleRowId.Count;
-        var rulesWithoutAlerts = RuleCount - rulesWithAlerts;
+        var rulesWithAlerts = analysis?.RulesWithAlertsCount ?? 0;
+        var rulesWithoutAlerts = analysis?.RulesWithoutAlertsCount ?? 0;
         RuleCoverageLabels = [ScreenText.WithAlerts, ScreenText.WithoutAlerts];
         RuleCoverageData = [rulesWithAlerts, rulesWithoutAlerts];
 
-        TopRepositories = DataStore.AlertCountByRepositoryRowId
-            .OrderByDescending(kv => kv.Value)
-            .Take(10)
-            .Select((kv, i) => new TopRepository(
-                i + 1,
-                repoNameMap.TryGetValue(kv.Key, out var name) ? name : $"Repo {kv.Key}",
-                kv.Value))
+        // ── Top repositories (top 25) ──
+        TopRepositories = DataStore.RepositorySet
+            .Where(r => r.TotalAlertsCount > 0)
+            .OrderByDescending(r => r.TotalAlertsCount)
+            .Take(25)
+            .Select((r, i) => new TopRepository(i + 1, r.RepositoryFullName, r.TotalAlertsCount))
             .ToList();
 
-        TopFilePaths = DataStore.TopFilePathAggregates
-            .Select((t, i) => new TopFilePath(
+        // ── Top file paths from pre-computed summary ──
+        var repoNameMap = DataStore.RepositorySet.ToDictionary(r => r.RowId, r => r.RepositoryFullName);
+        TopFilePaths = DataStore.Top25CommonFilePaths
+            .Take(25)
+            .Select((f, i) => new TopFilePath(
                 i + 1,
-                t.FilePath,
-                repoNameMap.TryGetValue(t.RepositoryRowId, out var rName) ? rName : $"Repo {t.RepositoryRowId}",
-                t.Count))
+                f.Name,
+                repoNameMap.TryGetValue(f.RepositoryRowId, out var rName) ? rName : $"Repo {f.RepositoryRowId}",
+                f.Count))
             .ToList();
 
         IsLoaded = true;
@@ -207,7 +203,7 @@ public partial class DashboardPage
             _selectedSeverityIndex = value;
             if (value >= 0 && value < SeverityLabels.Length)
             {
-                NavigationManager.NavigateTo($"/alert?search={Uri.EscapeDataString(SeverityLabels[value])}");
+                NavigationManager.NavigateTo($"/alert?severity={Uri.EscapeDataString(SeverityLabels[value])}");
             }
         }
     }
@@ -215,7 +211,7 @@ public partial class DashboardPage
     private void RuleAlertCountClicked(TableRowClickEventArgs<RuleAlertCount> args)
     {
         if (args.Item is null) return;
-        NavigationManager.NavigateTo($"/alert?search={Uri.EscapeDataString(args.Item.Rule)}");
+        NavigationManager.NavigateTo($"/alert?rule={Uri.EscapeDataString(args.Item.Rule)}");
     }
 
     private int _selectedRepoCoverageIndex = -1;
@@ -251,7 +247,7 @@ public partial class DashboardPage
     private void TopRepositoryClicked(TableRowClickEventArgs<TopRepository> args)
     {
         if (args.Item is null) return;
-        NavigationManager.NavigateTo($"/alert?search={Uri.EscapeDataString(args.Item.Name)}");
+        NavigationManager.NavigateTo($"/alert?repo={Uri.EscapeDataString(args.Item.Name)}");
     }
 
     private void TopFilePathClicked(TableRowClickEventArgs<TopFilePath> args)

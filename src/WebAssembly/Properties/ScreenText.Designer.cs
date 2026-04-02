@@ -85,6 +85,15 @@ namespace MRVA.Reports.WebAssembly.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Alerts by Tag.
+        /// </summary>
+        internal static string AlertsByTag {
+            get {
+                return ResourceManager.GetString("AlertsByTag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Date.
         /// </summary>
         internal static string AnalysisDate {
@@ -508,6 +517,15 @@ namespace MRVA.Reports.WebAssembly.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Tag.
+        /// </summary>
+        internal static string Tag {
+            get {
+                return ResourceManager.GetString("Tag", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Multi-Repository Variant Analysis.
         /// </summary>
         internal static string Title {
@@ -535,7 +553,7 @@ namespace MRVA.Reports.WebAssembly.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Top 10 Affected Repositories.
+        ///   Looks up a localized string similar to Top 25 Affected Repositories.
         /// </summary>
         internal static string Top10AffectedRepositories {
             get {
@@ -544,7 +562,7 @@ namespace MRVA.Reports.WebAssembly.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Top 10 Most Common File Paths.
+        ///   Looks up a localized string similar to Top 25 Most Common File Paths.
         /// </summary>
         internal static string Top10CommonFilePaths {
             get {

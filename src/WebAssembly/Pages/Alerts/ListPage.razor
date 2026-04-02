@@ -7,10 +7,97 @@
     Items="BreadcrumbItems"
     Separator=">" />
 
-@if (AlertRows == null)
+@if (!IsInitialised)
 {
     <MudProgressLinear Color="Color.Default" Indeterminate="true" />
     return;
+}
+
+<MudText Typo="Typo.h6" Class="mb-2">@ScreenText.Alerts</MudText>
+
+<MudGrid Spacing="4" Class="mb-4">
+    <MudItem xs="12" sm="3">
+        <MudSelect T="string"
+                   Label="@ScreenText.Severity"
+                   Value="@SelectedSeverity"
+                   ValueChanged="@(v => SelectedSeverity = v)"
+                   Clearable="true"
+                   Variant="Variant.Outlined"
+                   Dense="true">
+            @foreach (var opt in SeverityOptions)
+            {
+                <MudSelectItem Value="@opt">@opt</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudAutocomplete T="string"
+                         Label="@ScreenText.Rule"
+                         Value="@SelectedRule"
+                         ValueChanged="@(v => SelectedRule = v)"
+                         SearchFunc="@((search, _) => Task.FromResult(RuleOptions.Where(r => string.IsNullOrEmpty(search) || r.Contains(search, StringComparison.OrdinalIgnoreCase))))"
+                         Clearable="true"
+                         Variant="Variant.Outlined"
+                         Dense="true" />
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudAutocomplete T="string"
+                         Label="@ScreenText.Repository"
+                         Value="@SelectedRepo"
+                         ValueChanged="@(v => SelectedRepo = v)"
+                         SearchFunc="@((search, _) => Task.FromResult(RepoOptions.Where(r => string.IsNullOrEmpty(search) || r.Contains(search, StringComparison.OrdinalIgnoreCase))))"
+                         Clearable="true"
+                         Variant="Variant.Outlined"
+                         Dense="true" />
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudSelect T="string"
+                   Label="@ScreenText.Tag"
+                   Value="@SelectedTag"
+                   ValueChanged="@(v => SelectedTag = v)"
+                   Clearable="true"
+                   Variant="Variant.Outlined"
+                   Dense="true">
+            @foreach (var opt in TagOptions)
+            {
+                <MudSelectItem Value="@opt">@opt</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+</MudGrid>
+
+<MudButton Variant="Variant.Filled"
+           Color="Color.Primary"
+           OnClick="@LoadAlertsAsync"
+           Disabled="@(!HasFilter || IsLoading)"
+           Class="mb-4">
+    @ScreenText.Search
+</MudButton>
+
+@if (!HasFilter)
+{
+    <MudAlert Severity="MudBlazor.Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+        Select a severity, rule, or repository filter above to load alerts.
+    </MudAlert>
+    return;
+}
+
+@if (IsLoading)
+{
+    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
+    return;
+}
+
+@if (AlertRows == null)
+{
+    return;
+}
+
+@if (WasCapped)
+{
+    <MudAlert Severity="MudBlazor.Severity.Warning" Variant="Variant.Outlined" Class="mb-4">
+        The data set is very large. Showing the first @AlertRows.Count.ToString("N0") alerts. Narrow your filter to see all results.
+    </MudAlert>
 }
 
 <MudDataGrid 
@@ -31,7 +118,7 @@
     FixedHeader="true"
     Height="70vh">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">@ScreenText.Alerts</MudText>
+        <MudText Typo="Typo.h6">@AlertRows.Count.ToString("N0") @ScreenText.Alerts</MudText>
         <MudSpacer/>
         <MudTextField
             @bind-Value="SearchString"

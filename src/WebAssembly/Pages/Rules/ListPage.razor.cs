@@ -81,13 +81,9 @@ public partial class ListPage
 
         SearchString = InitialSearch;
 
-        var alertCountsByRule = DataStore.AlertCountByRuleRowId;
-
         RuleRows = DataStore.RuleSet
             .OrderBy(r => r.Id)
-            .Select(r => new RuleRow(
-                r,
-                alertCountsByRule.TryGetValue(r.RowId, out var count) ? count : 0))
+            .Select(r => new RuleRow(r, r.TotalAlertsCount))
             .Where(r => HasAlertsFilter switch
             {
                 "true" => r.AlertCount > 0,

@@ -33,6 +33,23 @@ jobs:
       - name: Publish
         run: dotnet publish src/WebAssembly/WebAssembly.csproj -c Release -o release --nologo
 
+      # ── Generate .pb data files ──
+      # TODO: Replace with your actual CLI repo, build, and run commands.
+      # Example: checkout CLI repo, build it, run it to generate .pb files
+      # into the published wwwroot/data/ folder.
+      #
+      # - name: Checkout CLI
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: your-org/your-cli-repo
+      #     path: cli
+      #
+      # - name: Build CLI
+      #   run: dotnet build cli/YourCli.csproj -c Release
+      #
+      # - name: Generate .pb data files
+      #   run: dotnet run --project cli/YourCli.csproj -- --output release/wwwroot/data
+
       - name: Add .nojekyll file
         run: touch release/wwwroot/.nojekyll
 

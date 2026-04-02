@@ -23,34 +23,13 @@ public class DataStore
 
     public IReadOnlySet<Analysis> AnalysisSet { get; private set; } = new HashSet<Analysis>();
 
-    // ── Alert aggregations (computed via streaming – no full materialisation) ──
+    // ── Pre-computed dashboard summaries (tiny .pb files) ──
 
-    /// <summary>Total number of alerts in the data set.</summary>
-    public int AlertCount { get; private set; }
+    public IReadOnlyList<AlertsBySeverity> AlertsBySeverity { get; private set; } = [];
 
-    /// <summary>Number of alerts grouped by <see cref="Alert.RuleRowId"/>.</summary>
-    public IReadOnlyDictionary<int, int> AlertCountByRuleRowId { get; private set; } =
-        new Dictionary<int, int>();
+    public IReadOnlyList<AlertsByTag> AlertsByTag { get; private set; } = [];
 
-    /// <summary>Number of alerts grouped by <see cref="Alert.RepositoryRowId"/>.</summary>
-    public IReadOnlyDictionary<int, int> AlertCountByRepositoryRowId { get; private set; } =
-        new Dictionary<int, int>();
-
-    /// <summary>
-    /// Top file-path / repository combinations by alert count, pre-sorted descending.
-    /// Each tuple contains (FilePath, RepositoryRowId, Count).
-    /// </summary>
-    public IReadOnlyList<(string FilePath, int RepositoryRowId, int Count)> TopFilePathAggregates { get; private set; } =
-        [];
-
-    /// <summary>
-    /// A capped list of individual alerts (up to <see cref="MaxAlertRows"/>)
-    /// for use on the alerts detail page.
-    /// </summary>
-    public IReadOnlyList<Alert> Alerts { get; private set; } = [];
-
-    /// <summary>Whether the alert list was capped at <see cref="MaxAlertRows"/>.</summary>
-    public bool AlertsCapped { get; private set; }
+    public IReadOnlyList<Top25CommonFilePaths> Top25CommonFilePaths { get; private set; } = [];
 
     public DataStore(HttpClient httpClient)
     {
@@ -72,98 +51,92 @@ public class DataStore
         RuleSet = await LoadSetAsync("data/rule.pb", RuleList.Parser, list => list.Rules);
         RepositorySet = await LoadSetAsync("data/repository.pb", RepositoryList.Parser, list => list.Repositories);
         AnalysisSet = await LoadSetAsync("data/analysis.pb", AnalysisList.Parser, list => list.Analyses);
-        await LoadAlertAggregatesAsync();
+
+        AlertsBySeverity = await LoadListAsync("data/alerts-by-severity.pb", AlertsBySeverityList.Parser, list => list.Items);
+        AlertsByTag = await LoadListAsync("data/alerts-by-tag.pb", AlertsByTagList.Parser, list => list.Items);
+        Top25CommonFilePaths = await LoadListAsync("data/top25-common-file-paths.pb", Top25CommonFilePathsList.Parser, list => list.Items);
+
         IsLoaded = true;
     }
 
     /// <summary>
-    /// Stream-parses alert.pb one message at a time so that the full set of
-    /// <see cref="Alert"/> objects never needs to reside in memory simultaneously.
-    /// Aggregations are built incrementally and only up to <see cref="MaxAlertRows"/>
-    /// individual alerts are retained for the detail page.
+    /// Maximum number of bytes to download from a single alert .pb file.
+    /// ~100 MB should cover ~100K alerts at ~1 KB each.
     /// </summary>
-    private async Task LoadAlertAggregatesAsync()
+    private const int MaxDownloadBytes = 100 * 1024 * 1024;
+
+    /// <summary>
+    /// Loads alerts from a specific .pb file (e.g. a per-severity or per-repo split).
+    /// Downloads at most <see cref="MaxDownloadBytes"/> and parses up to
+    /// <see cref="MaxAlertRows"/> alert objects.
+    /// </summary>
+    /// <returns>The list of parsed alerts and whether the result was capped.</returns>
+    public async Task<(IReadOnlyList<Alert> Alerts, bool WasCapped)> LoadAlertsFromFileAsync(string url)
     {
-        using var response = await _httpClient.GetAsync("data/alert.pb", HttpCompletionOption.ResponseHeadersRead);
+        using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
 
         if (!response.IsSuccessStatusCode)
-            return;
+            return ([], false);
 
-        // Copy the HTTP stream into a MemoryStream so protobuf can perform
-        // synchronous reads (WASM forbids sync reads on HTTP streams).
-        // Pre-allocate based on Content-Length to avoid repeated buffer doubling.
+        // Read up to MaxDownloadBytes from the HTTP stream.
         await using var httpStream = await response.Content.ReadAsStreamAsync();
-        var contentLength = response.Content.Headers.ContentLength;
-        using var ms = new MemoryStream(contentLength.HasValue
-            ? (int)Math.Min(contentLength.Value, int.MaxValue)
-            : 4096);
-        await httpStream.CopyToAsync(ms);
+        using var ms = new MemoryStream(MaxDownloadBytes);
+        var buffer = new byte[81920];
+        var totalRead = 0;
+        int bytesRead;
+        while (totalRead < MaxDownloadBytes &&
+               (bytesRead = await httpStream.ReadAsync(buffer)) > 0)
+        {
+            var toWrite = Math.Min(bytesRead, MaxDownloadBytes - totalRead);
+            ms.Write(buffer, 0, toWrite);
+            totalRead += toWrite;
+        }
+
+        // Determine if HTTP stream had more data beyond our cap.
+        var downloadCapped = totalRead >= MaxDownloadBytes;
         ms.Position = 0;
 
-        // Aggregation accumulators
-        var alertCountByRule = new Dictionary<int, int>();
-        var alertCountByRepo = new Dictionary<int, int>();
-        var filePathCounts = new Dictionary<(string, int), int>();
-        var alerts = new List<Alert>();
-        var totalCount = 0;
-
-        // The wire-format tag for field 1 (length-delimited) in AlertList.
         var alertsTag = WireFormat.MakeTag(
             AlertList.AlertsFieldNumber,
             WireFormat.WireType.LengthDelimited);
 
         var input = new CodedInputStream(ms);
+        var alerts = new List<Alert>();
+        var rowCapped = false;
 
-        while (!input.IsAtEnd)
+        try
         {
-            var tag = input.ReadTag();
-
-            if (tag == alertsTag)
+            while (!input.IsAtEnd)
             {
-                var alert = new Alert();
-                input.ReadMessage(alert);
-                totalCount++;
+                var tag = input.ReadTag();
 
-                // ── by rule ──
-                if (!alertCountByRule.TryGetValue(alert.RuleRowId, out var rc))
-                    rc = 0;
-                alertCountByRule[alert.RuleRowId] = rc + 1;
-
-                // ── by repository ──
-                if (!alertCountByRepo.TryGetValue(alert.RepositoryRowId, out var repc))
-                    repc = 0;
-                alertCountByRepo[alert.RepositoryRowId] = repc + 1;
-
-                // ── by (filePath, repository) ──
-                if (!string.IsNullOrEmpty(alert.FilePath))
+                if (tag == alertsTag)
                 {
-                    var key = (alert.FilePath, alert.RepositoryRowId);
-                    if (!filePathCounts.TryGetValue(key, out var fpc))
-                        fpc = 0;
-                    filePathCounts[key] = fpc + 1;
-                }
+                    var alert = new Alert();
+                    input.ReadMessage(alert);
 
-                // Keep individual alerts up to the cap for the list page.
-                if (alerts.Count < MaxAlertRows)
-                    alerts.Add(alert);
-            }
-            else
-            {
-                input.SkipLastField();
+                    if (alerts.Count < MaxAlertRows)
+                    {
+                        alerts.Add(alert);
+                    }
+                    else
+                    {
+                        rowCapped = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    input.SkipLastField();
+                }
             }
         }
+        catch (InvalidProtocolBufferException)
+        {
+            // Truncated download — last message was incomplete; ignore it.
+        }
 
-        AlertCount = totalCount;
-        AlertCountByRuleRowId = alertCountByRule;
-        AlertCountByRepositoryRowId = alertCountByRepo;
-        Alerts = alerts;
-        AlertsCapped = totalCount > MaxAlertRows;
-
-        TopFilePathAggregates = filePathCounts
-            .OrderByDescending(kv => kv.Value)
-            .Take(10)
-            .Select(kv => (kv.Key.Item1, kv.Key.Item2, kv.Value))
-            .ToList();
+        return (alerts, downloadCapped || rowCapped);
     }
 
     private async Task<IReadOnlySet<T>> LoadSetAsync<TList, T>(
@@ -184,5 +157,23 @@ public class DataStore
         var bytes = await response.Content.ReadAsByteArrayAsync();
         var list = parser.ParseFrom(bytes);
         return selector(list).ToHashSet();
+    }
+
+    private async Task<IReadOnlyList<T>> LoadListAsync<TList, T>(
+        string url,
+        Google.Protobuf.MessageParser<TList> parser,
+        Func<TList, IEnumerable<T>> selector)
+        where TList : Google.Protobuf.IMessage<TList>
+    {
+        using var response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return [];
+        }
+
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        var list = parser.ParseFrom(bytes);
+        return selector(list).ToList();
     }
 }

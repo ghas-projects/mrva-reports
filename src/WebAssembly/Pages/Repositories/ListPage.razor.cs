@@ -54,6 +54,9 @@ public partial class ListPage
         {
             return true;
         }
+        if( row.Repository.AnalysisStatus.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) {
+            return true;
+        }
 
         return false;
     };
@@ -64,13 +67,9 @@ public partial class ListPage
 
         SearchString = InitialSearch;
 
-        var alertCountsByRepo = DataStore.AlertCountByRepositoryRowId;
-
         RepositoryList = DataStore.RepositorySet
             .OrderBy(r => r.RepositoryFullName)
-            .Select(r => new RepositoryRow(
-                r,
-                alertCountsByRepo.TryGetValue(r.RowId, out var count) ? count : 0))
+            .Select(r => new RepositoryRow(r, r.TotalAlertsCount))
             .Where(r => HasAlertsFilter switch
             {
                 "true" => r.AlertCount > 0,
