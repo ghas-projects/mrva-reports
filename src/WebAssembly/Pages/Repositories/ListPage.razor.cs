@@ -36,7 +36,7 @@ public partial class ListPage
     private RepositoryRow? SelectedRepository { get; set; }
 
     private string? SearchString { get; set; }
-    private int PageSize { get; set; } = 10;
+    private int PageSize { get; set; } = 100;
 
     private Func<RepositoryRow, bool> RepositoryFilter => row =>
     {
@@ -58,29 +58,18 @@ public partial class ListPage
         return false;
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
+        await DataStore.WaitForDatabaseAsync();
+        await Task.Yield(); // Yield to render the loading indicator
 
         SearchString = InitialSearch;
 
-        var alertCountsByRepo = DataStore.AlertSet
-            .GroupBy(a => a.RepositoryRowId)
-            .ToDictionary(g => g.Key, g => g.Count());
+        var details = DataStore.GetRepositoryDetails(HasAlertsFilter, StatusFilter);
 
-        RepositoryList = DataStore.RepositorySet
-            .OrderBy(r => r.RepositoryFullName)
-            .Select(r => new RepositoryRow(
-                r,
-                alertCountsByRepo.TryGetValue(r.RowId, out var count) ? count : 0))
-            .Where(r => HasAlertsFilter switch
-            {
-                "true" => r.AlertCount > 0,
-                "false" => r.AlertCount == 0,
-                _ => true,
-            })
-            .Where(r => string.IsNullOrEmpty(StatusFilter)
-                || r.Repository.AnalysisStatus.Equals(StatusFilter, StringComparison.OrdinalIgnoreCase))
+        RepositoryList = details
+            .Select(d => new RepositoryRow(d.Repository, d.AlertCount))
             .ToImmutableList();
 
         PageSize = RepositoryList.Count switch

@@ -38,7 +38,7 @@ public partial class ListPage
     private RuleRow? SelectedRow { get; set; }
 
     private string? SearchString { get; set; }
-    private int PageSize { get; set; } = 10;
+    private int PageSize { get; set; } = 100;
 
     private Func<RuleRow, bool> RuleFilter => row =>
     {
@@ -75,27 +75,18 @@ public partial class ListPage
         return false;
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
+        await DataStore.WaitForDatabaseAsync();
+        await Task.Yield(); // Yield to render the loading indicator
 
         SearchString = InitialSearch;
 
-        var alertCountsByRule = DataStore.AlertSet
-            .GroupBy(a => a.RuleRowId)
-            .ToDictionary(g => g.Key, g => g.Count());
+        var details = DataStore.GetRuleDetails(HasAlertsFilter);
 
-        RuleRows = DataStore.RuleSet
-            .OrderBy(r => r.Id)
-            .Select(r => new RuleRow(
-                r,
-                alertCountsByRule.TryGetValue(r.RowId, out var count) ? count : 0))
-            .Where(r => HasAlertsFilter switch
-            {
-                "true" => r.AlertCount > 0,
-                "false" => r.AlertCount == 0,
-                _ => true,
-            })
+        RuleRows = details
+            .Select(d => new RuleRow(d.Rule, d.AlertCount))
             .ToImmutableList();
 
         PageSize = RuleRows.Count switch

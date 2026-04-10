@@ -30,4 +30,18 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <!--
+    Compress the SQLite database after publish and remove the uncompressed
+    original. The app fetches the .gz file and decompresses client-side via
+    GZipStream, so no server-side Content-Encoding support is needed
+    (works on GitHub Pages, S3, etc.).
+  -->
+  <Target Name="CompressDatabase" AfterTargets="Publish">
+    <PropertyGroup>
+      <_DbPublishPath>$(PublishDir)wwwroot/data/mrva-analysis.db</_DbPublishPath>
+    </PropertyGroup>
+
+    <Exec Command="gzip -9 &quot;$(_DbPublishPath)&quot;" Condition="Exists('$(_DbPublishPath)')" />
+  </Target>
+
 </Project>
