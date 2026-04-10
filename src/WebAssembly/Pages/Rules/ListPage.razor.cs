@@ -17,7 +17,7 @@ public partial class ListPage
 
     private List<BreadcrumbItem> BreadcrumbItems =>
     [
-        new(ScreenText.Home, href: "/"),
+        new(ScreenText.Home, href: "./"),
         new(ScreenText.Rules, href: null, disabled: true),
     ];
 

@@ -30,7 +30,7 @@ public partial class ItemPage
 
         if (!RowId.HasValue)
         {
-            NavigationManager.NavigateTo("/rule");
+            NavigationManager.NavigateTo("rule");
             return;
         }
         
@@ -38,13 +38,13 @@ public partial class ItemPage
 
         if (Rule == null)
         {
-            NavigationManager.NavigateTo("/rule");
+            NavigationManager.NavigateTo("rule");
             return;
         }
         
         BreadcrumbItems =     [
-            new(ScreenText.Home, href: "/"),
-            new(ScreenText.Rules, href: "/rule"),
+            new(ScreenText.Home, href: "./"),
+            new(ScreenText.Rules, href: "rule"),
             new(Rule.Id, href: null, disabled: true)
         ];
     }

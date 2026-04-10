@@ -175,7 +175,7 @@ public partial class DashboardPage
             _selectedSeverityIndex = value;
             if (value >= 0 && value < SeverityLabels.Length)
             {
-                NavigationManager.NavigateTo($"/alert?search={Uri.EscapeDataString(SeverityLabels[value])}");
+                NavigationManager.NavigateTo($"alert?search={Uri.EscapeDataString(SeverityLabels[value])}");
             }
         }
     }
@@ -183,7 +183,7 @@ public partial class DashboardPage
     private void RuleAlertCountClicked(TableRowClickEventArgs<RuleAlertCount> args)
     {
         if (args.Item is null) return;
-        NavigationManager.NavigateTo($"/alert?search={Uri.EscapeDataString(args.Item.Rule)}");
+        NavigationManager.NavigateTo($"alert?search={Uri.EscapeDataString(args.Item.Rule)}");
     }
 
     private int _selectedRepoCoverageIndex = -1;
@@ -196,7 +196,7 @@ public partial class DashboardPage
             if (value >= 0 && value < RepoCoverageLabels.Length)
             {
                 var hasAlerts = value == 0 ? "true" : "false";
-                NavigationManager.NavigateTo($"/repo?hasAlerts={hasAlerts}");
+                NavigationManager.NavigateTo($"repo?hasAlerts={hasAlerts}");
             }
         }
     }
@@ -211,7 +211,7 @@ public partial class DashboardPage
             if (value >= 0 && value < RuleCoverageLabels.Length)
             {
                 var hasAlerts = value == 0 ? "true" : "false";
-                NavigationManager.NavigateTo($"/rule?hasAlerts={hasAlerts}");
+                NavigationManager.NavigateTo($"rule?hasAlerts={hasAlerts}");
             }
         }
     }
@@ -219,22 +219,22 @@ public partial class DashboardPage
     private void TopRepositoryClicked(TableRowClickEventArgs<TopRepository> args)
     {
         if (args.Item is null) return;
-        NavigationManager.NavigateTo($"/alert?search={Uri.EscapeDataString(args.Item.Name)}");
+        NavigationManager.NavigateTo($"alert?search={Uri.EscapeDataString(args.Item.Name)}");
     }
 
     private void TopFilePathClicked(TableRowClickEventArgs<TopFilePath> args)
     {
         if (args.Item is null) return;
-        NavigationManager.NavigateTo($"/alert?search={Uri.EscapeDataString(args.Item.Path)}");
+        NavigationManager.NavigateTo($"alert?search={Uri.EscapeDataString(args.Item.Path)}");
     }
 
-    private void NavigateToAlerts() => NavigationManager.NavigateTo("/alert");
-    private void NavigateToRepositories() => NavigationManager.NavigateTo("/repo");
-    private void NavigateToRules() => NavigationManager.NavigateTo("/rule");
+    private void NavigateToAlerts() => NavigationManager.NavigateTo("alert");
+    private void NavigateToRepositories() => NavigationManager.NavigateTo("repo");
+    private void NavigateToRules() => NavigationManager.NavigateTo("rule");
 
     private void NavigateToReposByStatus(string? status = null)
     {
-        var url = status is null ? "/repo" : $"/repo?status={Uri.EscapeDataString(status)}";
+        var url = status is null ? "repo" : $"repo?status={Uri.EscapeDataString(status)}";
         NavigationManager.NavigateTo(url);
     }
 }
