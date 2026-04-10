@@ -17,7 +17,7 @@ public partial class ListPage
         new(ScreenText.Alerts, href: null, disabled: true),
     ];
 
-    public record AlertRow(Alert Alert, string RuleName, string RuleKind, string RepositoryName, string Severity);
+    public record AlertRow(int AlertRowId, string RuleName, string RuleKind, string RepositoryName, string Severity, string FilePath);
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "search")]
@@ -27,25 +27,49 @@ public partial class ListPage
 
     private MudDataGrid<AlertRow>? _dataGrid;
 
+    private bool _isLoading = true;
+    private bool _detailVisible;
+    private AlertDetail? _selectedDetail;
+
+    private readonly DialogOptions _dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true,
+        CloseOnEscapeKey = true,
+    };
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
         SearchString = InitialSearch;
     }
 
-    private Task<GridData<AlertRow>> LoadServerData(GridState<AlertRow> state)
+    private async Task<GridData<AlertRow>> LoadServerData(GridState<AlertRow> state)
     {
-        var (details, totalItems) = DataStore.GetAlertDetailsPaged(state.Page, state.PageSize, SearchString);
+        _isLoading = true;
+        StateHasChanged();
+        await DataStore.WaitForDatabaseAsync();
+        await Task.Yield();
 
-        var rows = details
-            .Select(d => new AlertRow(d.Alert, d.RuleName, d.RuleKind, d.RepositoryName, d.Severity))
-            .ToList();
-
-        return Task.FromResult(new GridData<AlertRow>
+        try
         {
-            TotalItems = totalItems,
-            Items = rows,
-        });
+            var (headers, totalItems) = DataStore.GetAlertHeadersPaged(state.Page, state.PageSize, SearchString);
+
+            var rows = headers
+                .Select(h => new AlertRow(h.AlertRowId, h.RuleName, h.RuleKind, h.RepositoryName, h.Severity, h.FilePath))
+                .ToList();
+
+            return new GridData<AlertRow>
+            {
+                TotalItems = totalItems,
+                Items = rows,
+            };
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 
     private void OnSearchChanged(string? value)
@@ -53,4 +77,19 @@ public partial class ListPage
         SearchString = value;
         _dataGrid?.ReloadServerData();
     }
+
+    private void OnRowClick(DataGridRowClickEventArgs<AlertRow> args)
+    {
+        _selectedDetail = DataStore.GetAlertDetailByRowId(args.Item.AlertRowId);
+        _detailVisible = true;
+        StateHasChanged();
+    }
+
+    private static Color GetSeverityColor(string severity) => severity.ToLowerInvariant() switch
+    {
+        "error" => Color.Error,
+        "warning" => Color.Warning,
+        "note" or "recommendation" => Color.Info,
+        _ => Color.Default,
+    };
 }

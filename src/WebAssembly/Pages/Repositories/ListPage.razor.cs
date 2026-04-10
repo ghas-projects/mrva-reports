@@ -36,7 +36,7 @@ public partial class ListPage
     private RepositoryRow? SelectedRepository { get; set; }
 
     private string? SearchString { get; set; }
-    private int PageSize { get; set; } = 10;
+    private int PageSize { get; set; } = 100;
 
     private Func<RepositoryRow, bool> RepositoryFilter => row =>
     {
@@ -58,9 +58,11 @@ public partial class ListPage
         return false;
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
+        await DataStore.WaitForDatabaseAsync();
+        await Task.Yield(); // Yield to render the loading indicator
 
         SearchString = InitialSearch;
 

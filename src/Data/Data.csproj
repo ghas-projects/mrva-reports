@@ -6,8 +6,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>MRVA.Reports.Data</RootNamespace>
         <TargetFramework>net10.0</TargetFramework>
-      <UserSecretsId>2d692cac-8812-4d3b-984a-68d748274053</UserSecretsId>
-  </PropertyGroup>
+    </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.1" />

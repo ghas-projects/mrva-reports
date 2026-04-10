@@ -1,0 +1,108 @@
+/* ── Alert Detail Dialog ──────────────────────────────────────────
+   Global styles – MudDialog renders in a portal outside the
+   component DOM, so scoped CSS (::deep) cannot reach it.
+   ─────────────────────────────────────────────────────────────── */
+
+/* Title bar: dark strip matching the app bar */
+.alert-detail-dialog .mud-dialog-title {
+    background-color: #2D2D2D;
+    padding: 0;
+    margin: 0;
+}
+
+.alert-detail-dialog .dialog-title-bar {
+    display: flex;
+    align-items: center;
+    background-color: #2D2D2D;
+    color: #FFFFFF;
+    padding: 14px 24px;
+}
+
+.alert-detail-dialog .dialog-title-bar .mud-icon-root {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Actions bar */
+.alert-detail-actions {
+    padding: 12px 24px !important;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* Content area */
+.alert-detail-dialog .mud-dialog-content {
+    padding: 16px 24px;
+}
+
+/* Sections */
+.alert-detail-dialog .detail-section {
+    padding: 8px 0;
+}
+
+.alert-detail-dialog .detail-section-header {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: #666;
+    margin-bottom: 14px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid #2D2D2D;
+}
+
+/* Grid layouts */
+.alert-detail-dialog .detail-grid {
+    display: grid;
+    gap: 14px 28px;
+}
+
+.alert-detail-dialog .detail-grid-1 {
+    grid-template-columns: 1fr;
+}
+
+.alert-detail-dialog .detail-grid-2 {
+    grid-template-columns: 1fr 1fr;
+}
+
+.alert-detail-dialog .detail-grid-4 {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+/* Field containers */
+.alert-detail-dialog .detail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Labels: small, bold, muted, uppercase – clearly distinct from values */
+.alert-detail-dialog .detail-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Values: larger, darker, normal weight – clearly the data */
+.alert-detail-dialog .detail-value {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #1a1a1a;
+    line-height: 1.5;
+}
+
+/* Code snippets inside the dialog */
+.alert-detail-dialog .code-snippet {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Monaco', monospace;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin: 4px 0 0 0;
+    white-space: pre;
+    overflow-x: auto;
+    max-width: 100%;
+    max-height: 200px;
+}

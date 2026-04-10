@@ -14,21 +14,21 @@
             <MudPaper Class="d-flex flex-column align-center justify-center pa-4" Elevation="2">
                 <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Medium" Color="Color.Default" />
                 <MudText Typo="Typo.subtitle1" Class="mt-1">@AnalysisDate</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Default">Report Generation Date</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Default">@ScreenText.AnalysisDate</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="4">
             <MudPaper Class="d-flex flex-column align-center justify-center pa-4" Elevation="2">
                 <MudIcon Icon="@Icons.Material.Outlined.PlayCircleOutline" Size="Size.Medium" Color="Color.Success" />
                 <MudText Typo="Typo.subtitle1" Class="mt-1">@AnalysisStarted</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Default">Analysis Start Date</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Default">@ScreenText.Started</MudText>
             </MudPaper>
         </MudItem>
         <MudItem xs="12" sm="4">
             <MudPaper Class="d-flex flex-column align-center justify-center pa-4" Elevation="2">
                 <MudIcon Icon="@Icons.Material.Outlined.CheckCircleOutline" Size="Size.Medium" Color="Color.Info" />
                 <MudText Typo="Typo.subtitle1" Class="mt-1">@AnalysisCompleted</MudText>
-                <MudText Typo="Typo.caption" Color="Color.Default">Analysis Completed Date</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Default">@ScreenText.Completed</MudText>
             </MudPaper>
         </MudItem>
     </MudGrid>

@@ -11,11 +11,5 @@ public static class ServiceCollectionExtension
         services.AddSingleton<DataStore>();
         return services;
     }
-
-    public static async Task InitializeReportDataAsync(this IServiceProvider services, byte[] dbBytes)
-    {
-        var dataStore = services.GetRequiredService<DataStore>();
-        await dataStore.InitializeAsync(dbBytes);
-    }
     
 }
