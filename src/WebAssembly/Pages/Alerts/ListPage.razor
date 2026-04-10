@@ -7,37 +7,35 @@
     Items="BreadcrumbItems"
     Separator=">" />
 
-@if (AlertRows == null)
-{
-    <MudProgressLinear Color="Color.Default" Indeterminate="true" />
-    return;
-}
-
 <MudDataGrid 
+    @ref="_dataGrid"
     T="AlertRow"
-    Filterable="true"
-    Items="@AlertRows"
+    ServerData="@LoadServerData"
     MultiSelection="false"
-    QuickFilter="@AlertFilter"
-    SortMode="SortMode.Single"
+    SortMode="SortMode.None"
     Dense="true"
     Hover="true"
     Striped="true"
     Bordered="true"
     Elevation="2"
-    RowsPerPage="@PageSize"
+    RowsPerPage="100"
+    Loading="@_isLoading"
+    LoadingProgressColor="Color.Info"
     Class="mt-4"
-    Style="overflow-x: auto;"
+    Style="overflow-x: auto; cursor: pointer;"
     FixedHeader="true"
-    Height="70vh">
+    Height="70vh"
+    RowClick="@OnRowClick">
     <ToolBarContent>
         <MudText Typo="Typo.h6">@ScreenText.Alerts</MudText>
         <MudSpacer/>
         <MudTextField
-            @bind-Value="SearchString"
+            Value="SearchString"
+            ValueChanged="@((string v) => OnSearchChanged(v))"
             Placeholder="@ScreenText.Search"
             Adornment="Adornment.Start"
-            Immediate="true"
+            Immediate="false"
+            DebounceInterval="400"
             AdornmentIcon="@Icons.Material.Filled.Search"
             IconSize="Size.Medium"
             Class="mt-0"/>
@@ -47,50 +45,138 @@
         <PropertyColumn Property="r => r.RuleKind" Title="@ScreenText.Kind" />
         <PropertyColumn Property="r => r.RepositoryName" Title="@ScreenText.Repository" />
         <PropertyColumn Property="r => r.Severity" Title="@ScreenText.Severity" />
-        <PropertyColumn Property="r => r.Alert.FilePath" Title="@ScreenText.FilePath" />
-        <PropertyColumn Property="r => r.Alert.StartLine" Title="@ScreenText.StartLine" />
-        <PropertyColumn Property="r => r.Alert.StartColumn" Title="@ScreenText.StartColumn" />
-        <PropertyColumn Property="r => r.Alert.EndLine" Title="@ScreenText.EndLine" />
-        <PropertyColumn Property="r => r.Alert.EndColumn" Title="@ScreenText.EndColumn" />
-        <PropertyColumn Property="r => r.Alert.Message" Title="@ScreenText.Message" />
-        <TemplateColumn Title="@ScreenText.Source">
-            <CellTemplate>
-                @if (!string.IsNullOrEmpty(context.Item.Alert.CodeSnippetSource))
-                {
-                    <pre class="code-snippet">@context.Item.Alert.CodeSnippetSource</pre>
-                }
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Title="@ScreenText.Sink">
-            <CellTemplate>
-                @if (!string.IsNullOrEmpty(context.Item.Alert.CodeSnippetSink))
-                {
-                    <pre class="code-snippet">@context.Item.Alert.CodeSnippetSink</pre>
-                }
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Title="@ScreenText.Snippet">
-            <CellTemplate>
-                @if (!string.IsNullOrEmpty(context.Item.Alert.CodeSnippet))
-                {
-                    <pre class="code-snippet">@context.Item.Alert.CodeSnippet</pre>
-                }
-            </CellTemplate>
-        </TemplateColumn>
-        <TemplateColumn Title="@ScreenText.Context">
-            <CellTemplate>
-                @if (!string.IsNullOrEmpty(context.Item.Alert.CodeSnippetContext))
-                {
-                    <pre class="code-snippet">@context.Item.Alert.CodeSnippetContext</pre>
-                }
-            </CellTemplate>
-        </TemplateColumn>
-        <PropertyColumn Property="r => r.Alert.StepCount" Title="@ScreenText.StepCount" />
-        <PropertyColumn Property="r => r.Alert.ResultFingerprint" Title="@ScreenText.ResultFingerprint" />
+        <PropertyColumn Property="r => r.FilePath" Title="@ScreenText.FilePath" />
     </Columns>
     <PagerContent>
         <MudDataGridPager T="AlertRow" PageSizeOptions="@(new[] { 10, 25, 50, 100 })" />
     </PagerContent>
 </MudDataGrid>
+
+<MudDialog @bind-Visible="_detailVisible" Options="_dialogOptions" Class="alert-detail-dialog" ClassActions="alert-detail-actions">
+    <TitleContent>
+        <div class="dialog-title-bar">
+            <MudIcon Icon="@Icons.Material.Outlined.BugReport" Size="Size.Small" Class="mr-2" />
+            <MudText Typo="Typo.h6">@ScreenText.AlertDetails</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (_selectedDetail is not null)
+        {
+            <div class="detail-section">
+                <div><MudText Typo="Typo.overline" Class="detail-section-header">General</MudText></div>
+                <div class="detail-grid detail-grid-2">
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.Rule</MudText>
+                        <MudText Class="detail-value">@_selectedDetail.RuleName</MudText>
+                    </div>
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.Kind</MudText>
+                        <MudText Class="detail-value">@_selectedDetail.RuleKind</MudText>
+                    </div>
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.Repository</MudText>
+                        <MudText Class="detail-value">@_selectedDetail.RepositoryName</MudText>
+                    </div>
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.Severity</MudText>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined"
+                                 Color="@GetSeverityColor(_selectedDetail.Severity)">
+                            @_selectedDetail.Severity
+                        </MudChip>
+                    </div>
+                </div>
+            </div>
+
+            <MudDivider Class="my-2" />
+
+            <div class="detail-section">
+                <div><MudText Typo="Typo.overline" Class="detail-section-header">Location</MudText></div>
+                <div class="detail-grid detail-grid-1">
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.FilePath</MudText>
+                        <MudText Class="detail-value" Style="word-break: break-all;">@_selectedDetail.Alert.FilePath</MudText>
+                    </div>
+                </div>
+                <div class="detail-grid detail-grid-4">
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.StartLine</MudText>
+                        <MudText Class="detail-value">@_selectedDetail.Alert.StartLine</MudText>
+                    </div>
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.StartColumn</MudText>
+                        <MudText Class="detail-value">@_selectedDetail.Alert.StartColumn</MudText>
+                    </div>
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.EndLine</MudText>
+                        <MudText Class="detail-value">@_selectedDetail.Alert.EndLine</MudText>
+                    </div>
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.EndColumn</MudText>
+                        <MudText Class="detail-value">@_selectedDetail.Alert.EndColumn</MudText>
+                    </div>
+                </div>
+            </div>
+
+            <MudDivider Class="my-2" />
+
+            <div class="detail-section">
+                <div><MudText Typo="Typo.overline" Class="detail-section-header">@ScreenText.Message</MudText></div>
+                <MudText Class="detail-value">@_selectedDetail.Alert.Message</MudText>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_selectedDetail.Alert.CodeSnippetSource)
+                 || !string.IsNullOrEmpty(_selectedDetail.Alert.CodeSnippetSink)
+                 || !string.IsNullOrEmpty(_selectedDetail.Alert.CodeSnippet)
+                 || !string.IsNullOrEmpty(_selectedDetail.Alert.CodeSnippetContext))
+            {
+                <MudDivider Class="my-2" />
+
+                <div class="detail-section">
+                    <div><MudText Typo="Typo.overline" Class="detail-section-header">Code</MudText></div>
+
+                    @if (!string.IsNullOrEmpty(_selectedDetail.Alert.CodeSnippetSource))
+                    {
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.Source</MudText>
+                        <pre class="code-snippet">@_selectedDetail.Alert.CodeSnippetSource</pre>
+                    }
+                    @if (!string.IsNullOrEmpty(_selectedDetail.Alert.CodeSnippetSink))
+                    {
+                        <MudText Typo="Typo.caption" Class="detail-label mt-2">@ScreenText.Sink</MudText>
+                        <pre class="code-snippet">@_selectedDetail.Alert.CodeSnippetSink</pre>
+                    }
+                    @if (!string.IsNullOrEmpty(_selectedDetail.Alert.CodeSnippet))
+                    {
+                        <MudText Typo="Typo.caption" Class="detail-label mt-2">@ScreenText.Snippet</MudText>
+                        <pre class="code-snippet">@_selectedDetail.Alert.CodeSnippet</pre>
+                    }
+                    @if (!string.IsNullOrEmpty(_selectedDetail.Alert.CodeSnippetContext))
+                    {
+                        <MudText Typo="Typo.caption" Class="detail-label mt-2">@ScreenText.Context</MudText>
+                        <pre class="code-snippet">@_selectedDetail.Alert.CodeSnippetContext</pre>
+                    }
+                </div>
+            }
+
+            <MudDivider Class="my-2" />
+
+            <div class="detail-section">
+                <div><MudText Typo="Typo.overline" Class="detail-section-header">Metadata</MudText></div>
+                <div class="detail-grid detail-grid-2">
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.StepCount</MudText>
+                        <MudText Class="detail-value">@_selectedDetail.Alert.StepCount</MudText>
+                    </div>
+                    <div class="detail-field">
+                        <MudText Typo="Typo.caption" Class="detail-label">@ScreenText.ResultFingerprint</MudText>
+                        <MudText Class="detail-value" Style="word-break: break-all;">@_selectedDetail.Alert.ResultFingerprint</MudText>
+                    </div>
+                </div>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Dark" OnClick="@(() => _detailVisible = false)">@ScreenText.Close</MudButton>
+    </DialogActions>
+</MudDialog>
 
 </MudContainer>

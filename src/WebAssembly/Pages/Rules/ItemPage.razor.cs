@@ -22,9 +22,11 @@ public partial class ItemPage
     
     private Rule? Rule { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
+        await DataStore.WaitForDatabaseAsync();
+        await Task.Yield(); // Yield to render the loading indicator
 
         if (!RowId.HasValue)
         {
@@ -32,9 +34,7 @@ public partial class ItemPage
             return;
         }
         
-        Rule = DataStore
-            .RuleSet
-            .SingleOrDefault(rule => rule.RowId == RowId.Value);
+        Rule = DataStore.GetRuleByRowId(RowId.Value);
 
         if (Rule == null)
         {

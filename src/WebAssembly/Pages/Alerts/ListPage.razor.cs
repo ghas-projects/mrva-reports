@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using Microsoft.AspNetCore.Components;
 using MRVA.Reports.Data.Models;
 using MRVA.Reports.Data.Services;
@@ -18,68 +17,79 @@ public partial class ListPage
         new(ScreenText.Alerts, href: null, disabled: true),
     ];
 
-    public record AlertRow(Alert Alert, string RuleName, string RuleKind, string RepositoryName, string Severity);
+    public record AlertRow(int AlertRowId, string RuleName, string RuleKind, string RepositoryName, string Severity, string FilePath);
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "search")]
     public string? InitialSearch { get; set; }
 
-    private IList<AlertRow>? AlertRows { get; set; }
-
-    private int PageSize { get; set; } = 10;
-
     private string? SearchString { get; set; }
 
-    private Func<AlertRow, bool> AlertFilter => row =>
+    private MudDataGrid<AlertRow>? _dataGrid;
+
+    private bool _isLoading = true;
+    private bool _detailVisible;
+    private AlertDetail? _selectedDetail;
+
+    private readonly DialogOptions _dialogOptions = new()
     {
-        if (string.IsNullOrWhiteSpace(SearchString))
-        {
-            return true;
-        }
-
-        var s = SearchString;
-        var c = StringComparison.OrdinalIgnoreCase;
-
-        return row.RuleName.Contains(s, c)
-            || row.RuleKind.Contains(s, c)
-            || row.RepositoryName.Contains(s, c)
-            || row.Severity.Contains(s, c)
-            || row.Alert.FilePath.Contains(s, c)
-            || row.Alert.Message.Contains(s, c)
-            || row.Alert.CodeSnippetSource.Contains(s, c)
-            || row.Alert.CodeSnippetSink.Contains(s, c)
-            || row.Alert.CodeSnippet.Contains(s, c)
-            || row.Alert.CodeSnippetContext.Contains(s, c)
-            || row.Alert.ResultFingerprint.Contains(s, c);
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true,
+        CloseOnEscapeKey = true,
     };
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
         SearchString = InitialSearch;
-
-        var ruleNameMap = DataStore.RuleSet.ToDictionary(r => r.RowId, r => r.Id);
-        var ruleKindMap = DataStore.RuleSet.ToDictionary(r => r.RowId, r => r.Kind);
-        var ruleSeverityMap = DataStore.RuleSet.ToDictionary(r => r.RowId, r => r.SeverityLevel);
-        var repoNameMap = DataStore.RepositorySet.ToDictionary(r => r.RowId, r => r.RepositoryFullName);
-
-        AlertRows = DataStore.AlertSet
-            .OrderBy(a => a.RowId)
-            .Select(a => new AlertRow(
-                a,
-                ruleNameMap.TryGetValue(a.RuleRowId, out var ruleName) ? ruleName : $"Rule {a.RuleRowId}",
-                ruleKindMap.TryGetValue(a.RuleRowId, out var ruleKind) ? ruleKind : "unknown",
-                repoNameMap.TryGetValue(a.RepositoryRowId, out var repoName) ? repoName : $"Repo {a.RepositoryRowId}",
-                ruleSeverityMap.TryGetValue(a.RuleRowId, out var severity) ? severity : "unknown"))
-            .ToImmutableList();
-
-        PageSize = AlertRows.Count switch
-        {
-            > 100 => 100,
-            > 50 => 50,
-            > 10 => 25,
-            _ => 10,
-        };
     }
+
+    private async Task<GridData<AlertRow>> LoadServerData(GridState<AlertRow> state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+        await DataStore.WaitForDatabaseAsync();
+        await Task.Yield();
+
+        try
+        {
+            var (headers, totalItems) = DataStore.GetAlertHeadersPaged(state.Page, state.PageSize, SearchString);
+
+            var rows = headers
+                .Select(h => new AlertRow(h.AlertRowId, h.RuleName, h.RuleKind, h.RepositoryName, h.Severity, h.FilePath))
+                .ToList();
+
+            return new GridData<AlertRow>
+            {
+                TotalItems = totalItems,
+                Items = rows,
+            };
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OnSearchChanged(string? value)
+    {
+        SearchString = value;
+        _dataGrid?.ReloadServerData();
+    }
+
+    private void OnRowClick(DataGridRowClickEventArgs<AlertRow> args)
+    {
+        _selectedDetail = DataStore.GetAlertDetailByRowId(args.Item.AlertRowId);
+        _detailVisible = true;
+        StateHasChanged();
+    }
+
+    private static Color GetSeverityColor(string severity) => severity.ToLowerInvariant() switch
+    {
+        "error" => Color.Error,
+        "warning" => Color.Warning,
+        "note" or "recommendation" => Color.Info,
+        _ => Color.Default,
+    };
 }
