@@ -34,8 +34,8 @@
             ValueChanged="@((string v) => OnSearchChanged(v))"
             Placeholder="@ScreenText.Search"
             Adornment="Adornment.Start"
-            Immediate="false"
-            DebounceInterval="400"
+            Immediate="true"
+            DebounceInterval="800"
             AdornmentIcon="@Icons.Material.Filled.Search"
             IconSize="Size.Medium"
             Class="mt-0"/>

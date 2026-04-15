@@ -12,8 +12,7 @@ public partial class ListPage
     [Inject]
     public required DataStore DataStore { get; set; }
 
-    [Inject]
-    public required NavigationManager NavigationManager { get; set; }
+
 
     private List<BreadcrumbItem> BreadcrumbItems =>
     [
@@ -35,7 +34,6 @@ public partial class ListPage
     public string? HasAlertsFilter { get; set; }
 
     private IList<RuleRow>? RuleRows { get; set; }
-    private RuleRow? SelectedRow { get; set; }
 
     private string? SearchString { get; set; }
     private int PageSize { get; set; } = 100;
@@ -98,35 +96,4 @@ public partial class ListPage
         };
     }
 
-    private string RowStyleFunc(RuleRow row)
-    {
-        return row.Equals(SelectedRow) ? "background-color: var(--mud-palette-info-lighten)" : string.Empty;
-    }
-
-    private void RowClicked(DataGridRowClickEventArgs<RuleRow> args)
-    {
-        if (args.MouseEventArgs.Detail == 2)
-        {
-            SelectedRow = args.Item;
-            NavigateToRule();
-            return;
-        }
-
-        if (SelectedRow == args.Item)
-        {
-            SelectedRow = null;
-            return;
-        }
-
-        SelectedRow = args.Item;
-    }
-
-    private void NavigateToRule()
-    {
-        if (SelectedRow == null)
-        {
-            return;
-        }
-        NavigationManager.NavigateTo($"rule/{SelectedRow.Rule.RowId}");
-    }
 }

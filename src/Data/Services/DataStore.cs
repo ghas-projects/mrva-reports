@@ -438,23 +438,6 @@ public sealed class DataStore : IDisposable
         return filtered.ToList();
     }
 
-    // ── Single Rule ─────────────────────────────────────────────────────
-
-    public Rule? GetRuleByRowId(int rowId)
-    {
-        using var cmd = Connection.CreateCommand();
-        cmd.CommandText = "SELECT * FROM rule WHERE row_id = @rowId";
-        cmd.Parameters.AddWithValue("@rowId", rowId);
-        using var reader = cmd.ExecuteReader();
-
-        if (!reader.Read())
-        {
-            return null;
-        }
-
-        return ReadRule(reader);
-    }
-
     // ── Row Mappers ─────────────────────────────────────────────────────
 
     private static Analysis ReadAnalysis(SqliteDataReader reader) => new()
