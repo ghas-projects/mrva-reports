@@ -1,6 +1,6 @@
 # MRVA Reports
 
-A [Blazor WebAssembly](https://learn.microsoft.com/aspnet/core/blazor/) single-page application for visualizing results from [GitHub CodeQL Multi-Repository Variant Analysis (MRVA)](https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/about-codeql-packs#about-multi-repository-variant-analysis) runs.
+A [Blazor WebAssembly](https://learn.microsoft.com/aspnet/core/blazor/) single-page application for visualizing results from [GitHub CodeQL Multi-Repository Variant Analysis (MRVA)](https://docs.github.com/en/code-security/concepts/code-scanning/multi-repository-variant-analysis) runs.
 
 The app is fully client-side — no server-side backend is required. It can be statically hosted on GitHub Pages, Azure Static Web Apps, S3, or any static file server.
 
